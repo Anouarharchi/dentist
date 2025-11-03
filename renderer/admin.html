@@ -1,0 +1,316 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8">
+  <title>Admin Dashboard</title>
+  <style>
+    * { box-sizing: border-box; }
+    body {
+      font-family: Arial, sans-serif;
+      margin: 0;
+      background: #f4f6f8;
+      display: flex;
+      height: 100vh;
+      overflow: hidden;
+    }
+
+    .sidebar {
+      width: 230px;
+      background: #0d6efd;
+      color: white;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      padding-top: 20px;
+    }
+    .logo { font-size: 20px; font-weight: bold; margin-bottom: 30px; letter-spacing: 1px; }
+    .menu { list-style: none; width: 100%; padding: 0; }
+    .menu li { padding: 12px 20px; cursor: pointer; transition: background 0.3s; }
+    .menu li:hover { background: rgba(255, 255, 255, 0.2); }
+
+    .main { flex: 1; padding: 25px; overflow-y: auto; }
+    h1 { color: #0d6efd; display: inline-block; margin-top: 0; }
+    .top-buttons { float: right; }
+    button {
+      padding: 6px 12px; margin-left: 5px; cursor: pointer;
+      border: none; border-radius: 5px; color: white; transition: background 0.3s;
+    }
+    #logout { background: #dc3545; }
+    #logout:hover { background: #b02a37; }
+    #refresh, #add { background: #0d6efd; }
+    #refresh:hover, #add:hover { background: #084298; }
+
+    table { width: 100%; border-collapse: collapse; margin-top: 20px; background: white; border-radius: 6px; overflow: hidden; }
+    th, td { padding: 10px; border: 1px solid #e0e0e0; text-align: left; }
+    th { background: #0d6efd; color: white; }
+    td button { background: #ffc107; border: none; border-radius: 4px; padding: 5px 8px; margin-right: 5px; }
+    td button:hover { opacity: 0.8; }
+
+    #addModal {
+      display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+      background: rgba(0,0,0,0.5);
+    }
+    #modalContent {
+      background: white; padding: 20px; width: 350px; margin: 60px auto; border-radius: 8px;
+      max-height: 90vh; overflow-y: auto;
+    }
+    #modalContent input, #modalContent select { width: 100%; padding: 8px; margin-bottom: 10px; }
+    #modalContent button { width: 48%; }
+  </style>
+</head>
+<body>
+  <div class="sidebar">
+    <div class="logo">Clinic Admin</div>
+    <ul class="menu">
+      <li>Dashboard</li>
+      <li>Patients</li>
+      <li>Dentists</li>
+      <li>Appointments</li>
+      <li>Sessions</li>
+      <li>Settings</li>
+    </ul>
+  </div>
+
+  <div class="main">
+    <div>
+      <h1>Gestion du Personnel</h1>
+      <div class="top-buttons">
+        <button id="refresh">Actualiser</button>
+        <button id="add">Ajouter</button>
+        <button id="logout">Déconnexion</button>
+      </div>
+    </div>
+
+    <table id="table">
+      <thead>
+        <tr>
+          <th>ID</th><th>Nom</th><th>Prénom</th><th>Type</th><th>Droit</th><th>Login</th><th>CIN</th><th>Photo</th><th>Actions</th>
+        </tr>
+      </thead>
+      <tbody></tbody>
+    </table>
+  </div>
+
+  <div id="addModal">
+    <div id="modalContent">
+      <h3>Ajouter / Modifier un personnel</h3>
+      <input type="text" id="nom" placeholder="Nom">
+      <input type="text" id="prenom" placeholder="Prénom">
+      <input type="text" id="tel" placeholder="Téléphone">
+      <input type="text" id="mail" placeholder="Email">
+      <input type="text" id="adresse" placeholder="Adresse">
+      <input type="text" id="type" placeholder="Type (Ex: Employé, Médecin)">
+      <input type="text" id="specialite" placeholder="Spécialité">
+      <input type="text" id="cin" placeholder="CIN">
+      <input type="text" id="login" placeholder="Login">
+      <input type="password" id="motPasse" placeholder="Mot de passe">
+      <select id="droit">
+        <option value="user">User</option>
+        <option value="admin">Admin</option>
+        <option value="doctor">Doctor</option>
+        <option value="secretary">Secretary</option>
+        <option value="finance">Finance</option>
+      </select>
+      <input type="file" id="photo" accept="image/*">
+      <div style="text-align: right;">
+        <button id="saveBtn">Enregistrer</button>
+        <button id="cancelBtn">Annuler</button>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    let currentUser = null;
+
+    async function initCurrentUser() {
+      currentUser = await window.electronAPI.getCurrentUser();
+      if (!currentUser) {
+        alert('Utilisateur non connecté !');
+        window.electronAPI.logout();
+      }
+    }
+
+    async function loadPersonnels() {
+      try {
+        const personnels = await window.electronAPI.getPersonnels();
+        const tbody = document.querySelector('#table tbody');
+        tbody.innerHTML = '';
+
+        personnels.forEach(p => {
+          const tr = document.createElement('tr');
+          const photoPath = p.Photo ? `assets/${p.Photo}` : '';
+          tr.innerHTML = `
+            <td>${p.ID}</td>
+            <td>${p.Nom}</td>
+            <td>${p.Prenom}</td>
+            <td>${p.Type}</td>
+            <td>${p.Droit}</td>
+            <td>${p.Login}</td>
+            <td>${p.CIN}</td>
+            <td>${photoPath ? `<img src="${photoPath}" width="50" height="50">` : ''}</td>
+            <td>
+              <button onclick="editPersonnel(${p.ID})">Modifier</button>
+              <button onclick="deletePersonnel(${p.ID})">Supprimer</button>
+            </td>
+          `;
+          tbody.appendChild(tr);
+        });
+      } catch (err) {
+        console.error(err);
+        alert("Erreur lors du chargement des personnels.");
+      }
+    }
+
+    const addBtn = document.getElementById('add');
+    const refreshBtn = document.getElementById('refresh');
+    const logoutBtn = document.getElementById('logout');
+    const addModal = document.getElementById('addModal');
+    const saveBtn = document.getElementById('saveBtn');
+    const cancelBtn = document.getElementById('cancelBtn');
+
+    initCurrentUser();
+    loadPersonnels();
+
+    refreshBtn.addEventListener('click', loadPersonnels);
+    logoutBtn.addEventListener('click', () => window.electronAPI.logout());
+
+    addBtn.addEventListener('click', () => {
+      resetModalFields();
+      saveBtn.onclick = addPersonnel;
+      addModal.style.display = 'block';
+    });
+    cancelBtn.addEventListener('click', closeModal);
+
+    function closeModal() {
+      addModal.style.display = 'none';
+      resetModalFields();
+    }
+
+    function resetModalFields() {
+      const fields = ['nom','prenom','tel','mail','adresse','type','specialite','cin','login','motPasse','droit','photo'];
+      fields.forEach(f => {
+        const el = document.getElementById(f);
+        if (!el) return;
+        if (el.tagName === 'SELECT') el.value = 'user';
+        else if (el.type === 'file') el.value = '';
+        else el.value = '';
+      });
+    }
+
+    async function addPersonnel() {
+      if (!currentUser) await initCurrentUser();
+
+      const photoFile = document.getElementById('photo').files[0];
+      const CIN = document.getElementById('cin').value.trim();
+
+      const p = {
+        Nom: document.getElementById('nom').value.trim(),
+        Prenom: document.getElementById('prenom').value.trim(),
+        Tel: document.getElementById('tel').value.trim(),
+        Mail: document.getElementById('mail').value.trim(),
+        Adresse: document.getElementById('adresse').value.trim(),
+        Type: document.getElementById('type').value.trim() || 'Employé',
+        Specialite: document.getElementById('specialite').value.trim(),
+        CIN,
+        Login: document.getElementById('login').value.trim(),
+        MotPasse: document.getElementById('motPasse').value.trim(),
+        Droit: document.getElementById('droit').value,
+        DateEntree: new Date().toISOString().split('T')[0],
+        Photo: ''
+      };
+
+      if (!p.Nom || !p.Prenom || !p.Login || !p.MotPasse)
+        return alert("Nom, Prénom, Login et Mot de passe sont obligatoires !");
+
+      try {
+        if (photoFile) {
+          p.Photo = await window.electronAPI.savePhoto({ file: photoFile.path, CIN });
+        }
+
+        await window.electronAPI.addPersonnel(p);
+        await window.electronAPI.logOperation({
+          Mat: currentUser.ID,
+          Date_E: new Date().toISOString(),
+          Action: `Ajout personnel ${p.Nom} ${p.Prenom}`
+        });
+        loadPersonnels();
+        closeModal();
+      } catch (err) {
+        console.error(err);
+        alert("Erreur lors de l'ajout du personnel (login déjà utilisé ?)");
+      }
+    }
+
+    async function deletePersonnel(id) {
+      if (!currentUser) await initCurrentUser();
+
+      if (confirm("Supprimer cet utilisateur ?")) {
+        try {
+          await window.electronAPI.deletePersonnel(id);
+          await window.electronAPI.logOperation({
+            Mat: currentUser.ID,
+            Date_E: new Date().toISOString(),
+            Action: `Suppression personnel ID ${id}`
+          });
+          loadPersonnels();
+        } catch (err) {
+          console.error(err);
+          alert("Erreur lors de la suppression.");
+        }
+      }
+    }
+
+    async function editPersonnel(id) {
+      if (!currentUser) await initCurrentUser();
+
+      const personnels = await window.electronAPI.getPersonnels();
+      const p = personnels.find(x => x.ID === id);
+      if (!p) return alert("Personnel introuvable.");
+
+      ['nom','prenom','tel','mail','adresse','type','specialite','cin','login','motPasse','droit'].forEach(f => {
+        const el = document.getElementById(f);
+        if (!el) return;
+        el.value = p[f.charAt(0).toUpperCase() + f.slice(1)] || '';
+      });
+
+      addModal.style.display = 'block';
+
+      saveBtn.onclick = async () => {
+        const photoFile = document.getElementById('photo').files[0];
+        const updatedP = {
+          ...p,
+          Nom: document.getElementById('nom').value.trim(),
+          Prenom: document.getElementById('prenom').value.trim(),
+          Tel: document.getElementById('tel').value.trim(),
+          Mail: document.getElementById('mail').value.trim(),
+          Adresse: document.getElementById('adresse').value.trim(),
+          Type: document.getElementById('type').value.trim() || 'Employé',
+          Specialite: document.getElementById('specialite').value.trim(),
+          CIN: document.getElementById('cin').value.trim(),
+          Login: document.getElementById('login').value.trim(),
+          MotPasse: document.getElementById('motPasse').value.trim(),
+          Droit: document.getElementById('droit').value,
+        };
+
+        try {
+          if (photoFile) {
+            updatedP.Photo = await window.electronAPI.savePhoto({ file: photoFile.path, CIN: updatedP.CIN });
+          }
+
+          await window.electronAPI.updatePersonnel(updatedP);
+          await window.electronAPI.logOperation({
+            Mat: currentUser.ID,
+            Date_E: new Date().toISOString(),
+            Action: `Modification personnel ID ${p.ID}`
+          });
+          loadPersonnels();
+          closeModal();
+        } catch (err) {
+          console.error(err);
+          alert("Erreur lors de la modification.");
+        }
+      };
+    }
+  </script>
+</body>
+</html>

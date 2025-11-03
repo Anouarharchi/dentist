@@ -1,0 +1,44 @@
+{
+  "name": "dentist",
+  "version": "1.0.0",
+  "description": "Dentist clinic management software built with Electron, SQLite, and FullCalendar.",
+  "main": "main.js",
+  "author": "Anouar Harchi",
+  "license": "MIT",
+  "type": "commonjs",
+  "scripts": {
+    "start": "electron .",
+    "dev": "electron .",
+    "build": "electron-builder"
+  },
+  "dependencies": {
+    "@fullcalendar/core": "^6.1.19",
+    "@fullcalendar/daygrid": "^6.1.19",
+    "@fullcalendar/timegrid": "^6.1.19",
+    "axios": "^1.6.7",
+    "bootstrap": "^5.3.3",
+    "electron": "^30.0.0",
+    "sqlite3": "^5.1.7"
+  },
+  "devDependencies": {
+    "electron-builder": "^24.13.3"
+  },
+  "build": {
+    "appId": "com.dentist.app",
+    "productName": "Dentist",
+    "directories": {
+      "buildResources": "assets",
+      "output": "dist"
+    },
+    "files": [
+      "main.js",
+      "renderer/**/*",
+      "package.json",
+      "db/**/*"
+    ],
+    "win": {
+      "target": "nsis",
+      "icon": "assets/icon.ico"
+    }
+  }
+}
