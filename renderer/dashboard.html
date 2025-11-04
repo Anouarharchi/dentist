@@ -1,0 +1,68 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <title>
+Gestion du Personnel - Clinique
+  </title>
+  <meta charset="UTF-8">
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+<div>
+  <h1>Gestion du Personnel</h1>
+  <div class="top-buttons">
+    <button id="refresh">Actualiser</button>
+    <button id="add">Ajouter</button>
+    <button id="logout">Déconnexion</button>
+  </div>
+
+  <table id="table">
+    <thead>
+      <tr>
+        <th>ID</th><th>Nom</th><th>Prénom</th><th>Type</th><th>Droit</th><th>Login</th><th>CIN</th><th>Photo</th><th>Actions</th>
+      </tr>
+    </thead>
+    <tbody></tbody>
+  </table>
+</div>
+
+<div id="addModal">
+  <div id="modalContent">
+    <h3>Ajouter / Modifier un personnel</h3>
+    <input type="text" id="nom" placeholder="Nom">
+    <input type="text" id="prenom" placeholder="Prénom">
+    <input type="text" id="tel" placeholder="Téléphone">
+    <input type="text" id="mail" placeholder="Email">
+    <input type="text" id="adresse" placeholder="Adresse">
+    <input type="text" id="type" placeholder="Type (Ex: Employé, Médecin)">
+    <input type="text" id="specialite" placeholder="Spécialité">
+    <input type="text" id="cin" placeholder="CIN">
+    <input type="text" id="login" placeholder="Login">
+    <input type="password" id="motPasse" placeholder="Mot de passe">
+    <select id="droit">
+      <option value="user">User</option>
+      <option value="admin">Admin</option>
+      <option value="doctor">Doctor</option>
+      <option value="secretary">Secretary</option>
+      <option value="finance">Finance</option>
+    </select>
+    <input type="file" id="photo" accept="image/*">
+    <div style="text-align: right;">
+    <button id="saveBtn"
+        style="margin-bottom: 8px; background-color: #4CAF50; color: white; border: none; padding: 8px 16px; border-radius: 4px; cursor: pointer;"
+        onmouseover="this.style.backgroundColor='#45a049';"
+        onmouseout="this.style.backgroundColor='#4CAF50';">
+  Enregistrer
+</button>
+
+<button id="cancelBtn"
+        style="background-color: #f44336; color: white; border: none; padding: 8px 16px; border-radius: 4px; cursor: pointer;"
+        onmouseover="this.style.backgroundColor='#e53935';"
+        onmouseout="this.style.backgroundColor='#f44336';">
+  Annuler
+</button>
+
+
+    </div>
+  </div>
+</div>

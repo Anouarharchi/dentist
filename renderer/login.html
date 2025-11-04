@@ -94,21 +94,10 @@
           msgDiv.textContent = `Bienvenue ${result.user.Nom || result.user.Login} !`;
           msgDiv.className = 'success';
 
-          // Définir le rôle en minuscule
-          let role = result.user.Droit ? result.user.Droit.toLowerCase() : 'personnel';
-          const validRoles = ['admin', 'doctor', 'secretary', 'finance'];
-          if (!validRoles.includes(role)) role = 'personnel';
-
-          console.log('Login réussi:', result.user.Login, 'Rôle:', role);
-
           // Attendre un petit délai avant d’ouvrir le dashboard
           setTimeout(() => {
-            // ✅ Utilisation de la méthode preload exposée
-            if (window.electronAPI.openDashboard) {
-              window.electronAPI.openDashboard(role);
-            } else {
-              console.error('La fonction openDashboard n’est pas exposée par le preload.js');
-            }
+            // Ouvre le nouveau index.html avec le menu et pages dynamiques
+            window.location.replace('index.html');
           }, 300);
 
         } else {

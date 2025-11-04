@@ -3,82 +3,63 @@ const path = require('path');
 
 const dbPath = path.join(__dirname, 'db', 'clinic.db');
 const db = new sqlite3.Database(dbPath);
+// After creating the HistoriqueDate table
+db.serialize(() => {
+  // Check if Action column exists
+  db.get("PRAGMA table_info(HistoriqueDate)", (err, row) => {
+    if (err) return console.error(err);
+    
+    db.all("PRAGMA table_info(HistoriqueDate)", (err, columns) => {
+      if (err) return console.error(err);
+
+      const hasAction = columns.some(col => col.name === "Action");
+      if (!hasAction) {
+        db.run("ALTER TABLE HistoriqueDate ADD COLUMN Action TEXT", (err) => {
+          if (err) console.error("Erreur ajout colonne Action:", err);
+          else console.log("✅ Colonne Action ajoutée à HistoriqueDate");
+        });
+      }
+    });
+  });
+});
 
 // ---------------------------
 // 🧱 Create tables if not exist
 // ---------------------------
 db.serialize(() => {
-  // Patients table
   db.run(`CREATE TABLE IF NOT EXISTS Patients (
     IDP INTEGER PRIMARY KEY AUTOINCREMENT,
-    Nom TEXT,
-    Prenom TEXT,
-    CIN TEXT,
-    DateNaissance TEXT,
-    Tel TEXT,
-    Email TEXT,
-    Adresse TEXT,
-    Ville TEXT,
-    Allergies TEXT,
-    Remarques TEXT
+    Nom TEXT, Prenom TEXT, CIN TEXT, DateNaissance TEXT,
+    Tel TEXT, Email TEXT, Adresse TEXT, Ville TEXT,
+    Allergies TEXT, Remarques TEXT
   )`);
 
-  // Appointments table
   db.run(`CREATE TABLE IF NOT EXISTS RendezVous (
     IDRv INTEGER PRIMARY KEY AUTOINCREMENT,
-    IDP INTEGER,
-    DateRv TEXT,
-    HeureRv TEXT,
-    Statut TEXT,
-    TypePatient TEXT,
-    NomPrenom TEXT,
-    Email TEXT,
+    IDP INTEGER, DateRv TEXT, HeureRv TEXT, Statut TEXT,
+    TypePatient TEXT, NomPrenom TEXT, Email TEXT,
     FOREIGN KEY(IDP) REFERENCES Patients(IDP)
   )`);
 
-  // Personnel table
   db.run(`CREATE TABLE IF NOT EXISTS Personnel (
     ID INTEGER PRIMARY KEY AUTOINCREMENT,
-    Mie TEXT,
-    Nom TEXT,
-    Prenom TEXT,
-    Tel TEXT,
-    Mail TEXT,
-    Adresse TEXT,
-    Photo_FileData BLOB,
-    Photo_FileName TEXT,
-    Photo_FileType TEXT,
-    Type TEXT,
-    Specialite TEXT,
-    Login TEXT UNIQUE,
-    MotPasse TEXT,
-    DateEntree TEXT,
-    Droit TEXT,
-    CIN TEXT,
-    NbreEntree INTEGER DEFAULT 0
+    Mie TEXT, Nom TEXT, Prenom TEXT, Tel TEXT, Mail TEXT,
+    Adresse TEXT, Photo_FileData BLOB, Photo_FileName TEXT, Photo_FileType TEXT,
+    Type TEXT, Specialite TEXT, Login TEXT UNIQUE, MotPasse TEXT,
+    DateEntree TEXT, Droit TEXT, CIN TEXT, NbreEntree INTEGER DEFAULT 0
   )`);
 
-  // Consultation table
   db.run(`CREATE TABLE IF NOT EXISTS Consultation (
     IDC INTEGER PRIMARY KEY AUTOINCREMENT,
-    IDP INTEGER,
-    CIN TEXT,
-    Motif TEXT,
-    Diagnostic TEXT,
-    Observations TEXT,
-    Remarques TEXT,
-    NomMedecin TEXT,
-    PiècesJointes_FileData BLOB,
-    PiècesJointes_FileName TEXT,
-    PiècesJointes_FileType TEXT,
+    IDP INTEGER, CIN TEXT, Motif TEXT, Diagnostic TEXT,
+    Observations TEXT, Remarques TEXT, NomMedecin TEXT,
+    PiècesJointes_FileData BLOB, PiècesJointes_FileName TEXT, PiècesJointes_FileType TEXT,
     FOREIGN KEY(IDP) REFERENCES Patients(IDP)
   )`);
 
-  // Ordonnance table
   db.run(`CREATE TABLE IF NOT EXISTS Ordonnance (
     IDR INTEGER PRIMARY KEY AUTOINCREMENT,
-    IDC INTEGER,
-    IDP INTEGER,
+    IDC INTEGER, IDP INTEGER,
     Medicament1 TEXT, Posologie1 TEXT, Duree1 TEXT,
     Medicament2 TEXT, Posologie2 TEXT, Duree2 TEXT,
     Medicament3 TEXT, Posologie3 TEXT, Duree3 TEXT,
@@ -87,81 +68,44 @@ db.serialize(() => {
     FOREIGN KEY(IDP) REFERENCES Patients(IDP)
   )`);
 
-  // Honoraire table
   db.run(`CREATE TABLE IF NOT EXISTS Honoraire (
     IDH INTEGER PRIMARY KEY AUTOINCREMENT,
-    IDC INTEGER,
-    IDP INTEGER,
-    Montant REAL,
-    TypePrestation TEXT,
+    IDC INTEGER, IDP INTEGER, Montant REAL, TypePrestation TEXT,
     FOREIGN KEY(IDC) REFERENCES Consultation(IDC),
     FOREIGN KEY(IDP) REFERENCES Patients(IDP)
   )`);
 
-  // Reglement table
   db.run(`CREATE TABLE IF NOT EXISTS Reglement (
     IDR INTEGER PRIMARY KEY AUTOINCREMENT,
-    IDP INTEGER,
-    DateReglement TEXT,
-    Montant REAL,
-    Tel TEXT,
-    Email TEXT,
-    Adresse TEXT,
-    ModePaiement TEXT,
-    Solde REAL,
-    Ville TEXT,
-    CodePostal TEXT,
-    Statut TEXT,
-    Remarques TEXT,
-    NomMedecin TEXT,
-    Allergies TEXT,
-    PiècesJointes_FileData BLOB,
-    PiècesJointes_FileName TEXT,
-    PiècesJointes_FileType TEXT,
+    IDP INTEGER, DateReglement TEXT, Montant REAL,
+    Tel TEXT, Email TEXT, Adresse TEXT, ModePaiement TEXT,
+    Solde REAL, Ville TEXT, CodePostal TEXT, Statut TEXT,
+    Remarques TEXT, NomMedecin TEXT, Allergies TEXT,
+    PiècesJointes_FileData BLOB, PiècesJointes_FileName TEXT, PiècesJointes_FileType TEXT,
     FOREIGN KEY(IDP) REFERENCES Patients(IDP)
   )`);
 
-  // HistoriqueDate table (fixed with Action column)
   db.run(`CREATE TABLE IF NOT EXISTS HistoriqueDate (
     IDDate INTEGER PRIMARY KEY AUTOINCREMENT,
-    Date_E TEXT,
-    Mat INTEGER,
-    Action TEXT,
+    Date_E TEXT, Mat INTEGER, Action TEXT,
     FOREIGN KEY(Mat) REFERENCES Personnel(ID)
   )`);
 
-  // Suivi_doc table
   db.run(`CREATE TABLE IF NOT EXISTS Suivi_doc (
     IDSuivi INTEGER PRIMARY KEY AUTOINCREMENT,
-    RefDocument TEXT,
-    Fournisseur TEXT,
-    Date_S TEXT,
-    Date_R TEXT,
-    Mode_R TEXT,
-    Montant REAL,
-    Saisie TEXT,
-    Compatibilite TEXT,
-    ImageDoc_FileData BLOB,
-    ImageDoc_FileName TEXT,
-    ImageDoc_FileType TEXT,
-    ImageJustificatif_FileData BLOB,
-    ImageJustificatif_FileName TEXT,
-    ImageJustificatif_FileType TEXT,
+    RefDocument TEXT, Fournisseur TEXT, Date_S TEXT, Date_R TEXT,
+    Mode_R TEXT, Montant REAL, Saisie TEXT, Compatibilite TEXT,
+    ImageDoc_FileData BLOB, ImageDoc_FileName TEXT, ImageDoc_FileType TEXT,
+    ImageJustificatif_FileData BLOB, ImageJustificatif_FileName TEXT, ImageJustificatif_FileType TEXT,
     Observation TEXT
   )`);
 
-  // Approvisionnement table
   db.run(`CREATE TABLE IF NOT EXISTS Approvisionnement (
     ID_App INTEGER PRIMARY KEY AUTOINCREMENT,
-    DateApp TEXT,
-    Fournisseur TEXT,
-    IFF TEXT,
-    Produit TEXT,
-    Quantite INTEGER,
-    PrixUnitaire REAL
+    DateApp TEXT, Fournisseur TEXT, IFF TEXT, Produit TEXT, Quantite INTEGER, PrixUnitaire REAL
   )`);
 
-  // Default admin if not exists
+  // Default admin user
   db.get(`SELECT * FROM Personnel WHERE Login = 'admin'`, (err, row) => {
     if (!row) {
       db.run(`INSERT INTO Personnel (
@@ -235,7 +179,8 @@ function checkLogin(login, pass) {
 }
 function getAllPersonnel() {
   return new Promise((resolve, reject) => {
-    db.all('SELECT * FROM Personnel WHERE Login != "admin"', [], (err, rows) => {
+    // Add RowNum for sequential display
+    db.all('SELECT *, ROW_NUMBER() OVER (ORDER BY ID) AS RowNum FROM Personnel WHERE Login != "admin"', [], (err, rows) => {
       if (err) reject(err);
       else resolve(rows);
     });
@@ -243,9 +188,14 @@ function getAllPersonnel() {
 }
 function addPersonnel(p) {
   return new Promise((resolve, reject) => {
-    const sql = `INSERT INTO Personnel (Mie, Nom, Prenom, Tel, Mail, Adresse, Type, Specialite, Login, MotPasse, DateEntree, Droit, CIN)
-      VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`;
-    const params = [p.Mie, p.Nom, p.Prenom, p.Tel, p.Mail, p.Adresse, p.Type, p.Specialite, p.Login, p.MotPasse, p.DateEntree, p.Droit, p.CIN];
+    const sql = `INSERT INTO Personnel 
+      (Mie, Nom, Prenom, Tel, Mail, Adresse, Type, Specialite, Login, MotPasse, DateEntree, Droit, CIN, Photo_FileData, Photo_FileName, Photo_FileType)
+      VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`;
+    const params = [
+      p.Mie, p.Nom, p.Prenom, p.Tel, p.Mail, p.Adresse, p.Type, p.Specialite, 
+      p.Login, p.MotPasse, p.DateEntree, p.Droit, p.CIN, 
+      p.Photo_FileData || null, p.Photo_FileName || null, p.Photo_FileType || null
+    ];
     db.run(sql, params, function(err) {
       if (err) reject(err);
       else resolve(this.lastID);
@@ -334,6 +284,15 @@ function addReglement(r) {
 }
 
 // --- Historique ---
+function addHistorique(entry) {
+  return new Promise((resolve, reject) => {
+    const sql = `INSERT INTO HistoriqueDate (Mat, Date_E, Action) VALUES (?, ?, ?)`;
+    db.run(sql, [entry.Mat, entry.Date_E, entry.Action], function(err) {
+      if (err) return reject(err);
+      resolve(this.lastID);
+    });
+  });
+}
 function addHistoriqueDate(log) {
   return new Promise((resolve, reject) => {
     const sql = `INSERT INTO HistoriqueDate (Date_E, Mat, Action) VALUES (?, ?, ?)`;
@@ -349,7 +308,6 @@ function addHistoriqueDate(log) {
 // 📦 Exports
 // =====================
 module.exports = {
-  // Old
   getPatients,
   addPatient,
   getAppointmentsByDate,
@@ -359,12 +317,11 @@ module.exports = {
   addPersonnel,
   updatePersonnel,
   deletePersonnel,
-  // New
   addConsultation,
   getConsultationsByPatient,
   addOrdonnance,
   addHonoraire,
   addReglement,
-  // Historique
+  addHistorique,
   addHistoriqueDate
 };

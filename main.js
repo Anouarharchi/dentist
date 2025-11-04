@@ -1,16 +1,16 @@
-const { app, BrowserWindow, ipcMain } = require('electron');
+const { app, BrowserWindow, ipcMain } = require('electron'); 
 const path = require('path');
 const fs = require('fs');
-const db = require('./db.js'); // Base de données
+const db = require('./db.js'); // Database module
 
 // ---------------------------
-// Variables globales
+// Global variables
 // ---------------------------
 let mainWindow;
 let currentUser = null;
 
 // ---------------------------
-// Vérifier et créer dossier db et assets si manquant
+// Ensure db and assets directories exist
 // ---------------------------
 const dbDir = path.join(__dirname, 'db');
 if (!fs.existsSync(dbDir)) fs.mkdirSync(dbDir);
@@ -19,7 +19,7 @@ const assetsDir = path.join(__dirname, 'assets');
 if (!fs.existsSync(assetsDir)) fs.mkdirSync(assetsDir);
 
 // ---------------------------
-// Fonction pour créer la fenêtre principale
+// Create main window
 // ---------------------------
 function createWindow() {
   mainWindow = new BrowserWindow({
@@ -36,7 +36,7 @@ function createWindow() {
 }
 
 // ---------------------------
-// ✅ Login utilisateur
+// Login
 // ---------------------------
 ipcMain.handle('check-login', async (event, creds) => {
   try {
@@ -57,219 +57,107 @@ ipcMain.handle('check-login', async (event, creds) => {
 });
 
 // ---------------------------
-// Récupérer utilisateur actuel
+// Get current user
 // ---------------------------
-ipcMain.handle('get-current-user', async () => {
-  try {
-    return currentUser ? { ...currentUser } : null;
-  } catch (err) {
-    console.error('Erreur get-current-user:', err);
-    throw err;
-  }
-});
+ipcMain.handle('get-current-user', async () => currentUser ? { ...currentUser } : null);
 
 // ---------------------------
-// Déconnexion
+// Logout
 // ---------------------------
 ipcMain.on('logout', () => {
   currentUser = null;
-  if (mainWindow) {
-    mainWindow.loadFile(path.join(__dirname, 'renderer', 'login.html'));
-  }
+  if (mainWindow) mainWindow.loadFile(path.join(__dirname, 'renderer', 'login.html'));
 });
 
 // ---------------------------
-// 🧩 CRUD Personnel
-// ---------------------------
-ipcMain.handle('get-personnels', async () => {
+// Delete photo
+// ---------------------------  
+ipcMain.handle('delete-photo', async (event, photoName) => {
+  const filePath = path.join(__dirname, 'assets', photoName);
   try {
-    return await db.getAllPersonnel();
+    await fs.promises.unlink(filePath);
+    console.log('Deleted old photo:', filePath);
   } catch (err) {
-    console.error('Erreur get-personnels:', err);
-    throw err;
+    if (err.code !== 'ENOENT') console.error('Failed to delete photo:', err);
   }
-});
-
-ipcMain.handle('add-personnel', async (event, p) => {
-  try {
-    return await db.addPersonnel(p);
-  } catch (err) {
-    console.error('Erreur add-personnel:', err);
-    throw err;
-  }
-});
-
-ipcMain.handle('update-personnel', async (event, p) => {
-  try {
-    return await db.updatePersonnel(p);
-  } catch (err) {
-    console.error('Erreur update-personnel:', err);
-    throw err;
-  }
-});
-
-ipcMain.handle('delete-personnel', async (event, id) => {
-  try {
-    return await db.deletePersonnel(id);
-  } catch (err) {
-    console.error('Erreur delete-personnel:', err);
-    throw err;
-  }
+  return true;
 });
 
 // ---------------------------
-// 🧩 Patients & Appointments
+// Personnel CRUD
 // ---------------------------
-ipcMain.handle('get-patients', async () => {
-  try {
-    return await db.getPatients();
-  } catch (err) {
-    console.error('Erreur get-patients:', err);
-    throw err;
-  }
-});
-
-ipcMain.handle('add-patient', async (event, patient) => {
-  try {
-    return await db.addPatient(patient);
-  } catch (err) {
-    console.error('Erreur add-patient:', err);
-    throw err;
-  }
-});
-
-ipcMain.handle('get-appointments-by-date', async (event, date) => {
-  try {
-    return await db.getAppointmentsByDate(date);
-  } catch (err) {
-    console.error('Erreur get-appointments-by-date:', err);
-    throw err;
-  }
-});
-
-ipcMain.handle('add-appointment', async (event, appt) => {
-  try {
-    return await db.addAppointment(appt);
-  } catch (err) {
-    console.error('Erreur add-appointment:', err);
-    throw err;
-  }
-});
+ipcMain.handle('get-personnels', () => db.getAllPersonnel());
+ipcMain.handle('add-personnel', (event, p) => db.addPersonnel(p));
+ipcMain.handle('update-personnel', (event, p) => db.updatePersonnel(p));
+ipcMain.handle('delete-personnel', (event, id) => db.deletePersonnel(id));
 
 // ---------------------------
-// 🧩 Consultation
+// Patients & Appointments
 // ---------------------------
-ipcMain.handle('add-consultation', async (event, c) => {
-  try {
-    return await db.addConsultation(c);
-  } catch (err) {
-    console.error('Erreur add-consultation:', err);
-    throw err;
-  }
-});
-
-ipcMain.handle('get-consultations-by-patient', async (event, IDP) => {
-  try {
-    return await db.getConsultationsByPatient(IDP);
-  } catch (err) {
-    console.error('Erreur get-consultations-by-patient:', err);
-    throw err;
-  }
-});
+ipcMain.handle('get-patients', () => db.getPatients());
+ipcMain.handle('add-patient', (event, patient) => db.addPatient(patient));
+ipcMain.handle('get-appointments-by-date', (event, date) => db.getAppointmentsByDate(date));
+ipcMain.handle('add-appointment', (event, appt) => db.addAppointment(appt));
 
 // ---------------------------
-// 🧩 Ordonnance
+// Consultation
 // ---------------------------
-ipcMain.handle('add-ordonnance', async (event, o) => {
-  try {
-    return await db.addOrdonnance(o);
-  } catch (err) {
-    console.error('Erreur add-ordonnance:', err);
-    throw err;
-  }
-});
+ipcMain.handle('add-consultation', (event, c) => db.addConsultation(c));
+ipcMain.handle('get-consultations-by-patient', (event, IDP) => db.getConsultationsByPatient(IDP));
 
 // ---------------------------
-// 🧩 Honoraire
+// Ordonnance
 // ---------------------------
-ipcMain.handle('add-honoraire', async (event, h) => {
-  try {
-    return await db.addHonoraire(h);
-  } catch (err) {
-    console.error('Erreur add-honoraire:', err);
-    throw err;
-  }
-});
+ipcMain.handle('add-ordonnance', (event, o) => db.addOrdonnance(o));
 
 // ---------------------------
-// 🧩 Reglement
+// Honoraire
 // ---------------------------
-ipcMain.handle('add-reglement', async (event, r) => {
-  try {
-    return await db.addReglement(r);
-  } catch (err) {
-    console.error('Erreur add-reglement:', err);
-    throw err;
-  }
-});
+ipcMain.handle('add-honoraire', (event, h) => db.addHonoraire(h));
 
 // ---------------------------
-// 🧩 Historique
+// Reglement
 // ---------------------------
-// 🩵 FIXED HERE: replaced db.addHistoriqueDate with db.addHistorique
-ipcMain.handle('log-operation', async (event, log) => {
-  try {
-    return await db.addHistorique(log); // 🩵 corrected function name
-  } catch (err) {
-    console.error('Erreur log-operation:', err);
-    throw err;
-  }
-});
+ipcMain.handle('add-reglement', (event, r) => db.addReglement(r));
 
 // ---------------------------
-// 🖼 Sauvegarde photo personnel
+// Historique
+// ---------------------------
+ipcMain.handle('log-operation', (event, log) => db.addHistorique(log));
+
+// ---------------------------
+// Save personnel photo (non-blocking)
 // ---------------------------
 ipcMain.handle('save-photo', async (event, { file, CIN }) => {
+  if (!file) return null;
   try {
-    if (!file || !CIN) throw new Error("Fichier ou CIN manquant.");
     const ext = path.extname(file);
-    const destPath = path.join(assetsDir, CIN + ext);
-    fs.copyFileSync(file, destPath);
-    console.log('Photo sauvegardée:', destPath);
-    return CIN + ext;
+    const destPath = path.join(__dirname, 'assets', `${CIN}${ext}`);
+    await fs.promises.copyFile(file, destPath);
+    return `${CIN}${ext}`;
   } catch (err) {
-    console.error('Erreur save-photo:', err);
-    throw err;
+    console.error('Error saving photo:', err);
+    return null;
   }
 });
-
 // ---------------------------
-// 🪟 Ouvrir page selon rôle
+// Open dashboard based on role
 // ---------------------------
 ipcMain.on('open-dashboard', (event, role) => {
   if (!mainWindow) return;
   let page;
   switch (role) {
-    case 'admin':
-      page = path.join(__dirname, 'renderer', 'admin.html');
-      break;
-    case 'doctor':
-      page = path.join(__dirname, 'renderer', 'doctor.html');
-      break;
-    case 'secretary':
-      page = path.join(__dirname, 'renderer', 'secretary.html');
-      break;
-    case 'finance':
-      page = path.join(__dirname, 'renderer', 'finance.html');
-      break;
-    default:
-      page = path.join(__dirname, 'renderer', 'dashboard.html');
+    case 'admin': page = path.join(__dirname, 'renderer', 'admin.html'); break;
+    case 'doctor': page = path.join(__dirname, 'renderer', 'doctor.html'); break;
+    case 'secretary': page = path.join(__dirname, 'renderer', 'secretary.html'); break;
+    case 'finance': page = path.join(__dirname, 'renderer', 'finance.html'); break;
+    default: page = path.join(__dirname, 'renderer', 'dashboard.html');
   }
   mainWindow.loadFile(page);
 });
 
 // ---------------------------
-// 🏁 Lancement de l’app
+// App ready
 // ---------------------------
 app.whenReady().then(() => {
   createWindow();
