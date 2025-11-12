@@ -126,6 +126,20 @@ db.serialize(() => {
 // 📋 Functions
 // =====================
 
+
+
+
+
+
+function getAllHonoraires() {
+  return new Promise((resolve, reject) => {
+    db.all('SELECT Montant FROM Honoraire', [], (err, rows) => {
+      if(err) reject(err);
+      else resolve(rows);
+    });
+  });
+}
+
 // --- Patients ---
 function getPatients() {
   return new Promise((resolve, reject) => {
@@ -147,7 +161,6 @@ function addPatient(p) {
     });
   });
 }
-
 // --- Appointments ---
 function getAppointmentsByDate(date) {
   return new Promise((resolve, reject) => {
@@ -157,16 +170,78 @@ function getAppointmentsByDate(date) {
     });
   });
 }
+
+function getAppointmentsBetween(startDate, endDate) {
+  return new Promise((resolve, reject) => {
+    const sql = `SELECT * FROM RendezVous WHERE DateRv BETWEEN ? AND ? ORDER BY DateRv, HeureRv`;
+    db.all(sql, [startDate, endDate], (err, rows) => {
+      if (err) reject(err);
+      else resolve(rows);
+    });
+  });
+}
+
+function getAppointmentById(IDRv) {
+  return new Promise((resolve, reject) => {
+    db.get('SELECT * FROM RendezVous WHERE IDRv = ?', [IDRv], (err, row) => {
+      if (err) reject(err);
+      else resolve(row || null);
+    });
+  });
+}
+
 function addAppointment(appt) {
   return new Promise((resolve, reject) => {
-    const sql = `INSERT INTO RendezVous (IDP, DateRv, HeureRv, Statut, TypePatient, NomPrenom, Email) VALUES (?, ?, ?, ?, ?, ?, ?)`;
-    const params = [appt.IDP, appt.DateRv, appt.HeureRv, appt.Statut, appt.TypePatient, appt.NomPrenom, appt.Email];
+    const sql = `INSERT INTO RendezVous 
+      (IDP, DateRv, HeureRv, Statut, TypePatient, NomPrenom, Email)
+      VALUES (?, ?, ?, ?, ?, ?, ?)`;
+    const params = [
+      appt.IDP || null,
+      appt.DateRv || new Date().toISOString().split('T')[0],
+      appt.HeureRv || "08:00",
+      appt.Statut || "Planifié",
+      appt.TypePatient || "",
+      appt.NomPrenom || "",
+      appt.Email || ""
+    ];
     db.run(sql, params, function(err) {
       if (err) reject(err);
       else resolve(this.lastID);
     });
   });
 }
+
+function updateAppointment(appt) {
+  return new Promise((resolve, reject) => {
+    const sql = `UPDATE RendezVous
+      SET IDP = ?, DateRv = ?, HeureRv = ?, Statut = ?, TypePatient = ?, NomPrenom = ?, Email = ?
+      WHERE IDRv = ?`;
+    const params = [
+      appt.IDP || null,
+      appt.DateRv || new Date().toISOString().split('T')[0],
+      appt.HeureRv || "08:00",
+      appt.Statut || "Planifié",
+      appt.TypePatient || "",
+      appt.NomPrenom || "",
+      appt.Email || "",
+      appt.IDRv
+    ];
+    db.run(sql, params, function(err) {
+      if (err) reject(err);
+      else resolve(true);
+    });
+  });
+}
+
+function deleteAppointmentById(IDRv) {
+  return new Promise((resolve, reject) => {
+    db.run('DELETE FROM RendezVous WHERE IDRv = ?', [IDRv], function(err) {
+      if (err) reject(err);
+      else resolve(true);
+    });
+  });
+}
+
 
 // --- Personnel ---
 function checkLogin(login, pass) {
@@ -323,5 +398,10 @@ module.exports = {
   addHonoraire,
   addReglement,
   addHistorique,
-  addHistoriqueDate
+  addHistoriqueDate,
+  getAllHonoraires,
+  getAppointmentsBetween,
+  getAppointmentById,
+  updateAppointment,
+  deleteAppointmentById
 };

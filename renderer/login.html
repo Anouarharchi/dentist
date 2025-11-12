@@ -91,16 +91,15 @@
         const result = await window.electronAPI.checkLogin({ username, password });
 
         if (result.success) {
-          msgDiv.textContent = `Bienvenue ${result.user.Nom || result.user.Login} !`;
-          msgDiv.className = 'success';
+  msgDiv.textContent = `Bienvenue ${result.user.Nom || result.user.Login} !`;
+  msgDiv.className = 'success';
 
-          // Attendre un petit délai avant d’ouvrir le dashboard
-          setTimeout(() => {
-            // Ouvre le nouveau index.html avec le menu et pages dynamiques
-            window.location.replace('index.html');
-          }, 300);
-
-        } else {
+  setTimeout(() => {
+    // Open the dashboard based on user role (Droit)
+    window.electronAPI.openDashboard(result.user.Droit?.toLowerCase() || 'dashboard');
+  }, 500);
+}
+ else {
           msgDiv.textContent = result.message || 'Identifiants incorrects.';
           msgDiv.className = 'error';
         }

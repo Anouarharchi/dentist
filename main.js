@@ -124,6 +124,18 @@ ipcMain.handle('add-reglement', (event, r) => db.addReglement(r));
 // Historique
 // ---------------------------
 ipcMain.handle('log-operation', (event, log) => db.addHistorique(log));
+// ---------------------------
+// Dashboard statistics
+// ---------------------------  
+ipcMain.handle('get-patients-count', async () => {
+  const patients = await db.getPatients(); // your existing db function
+  return patients.length;
+});
+
+ipcMain.handle('get-income', async () => {
+  const honoraires = await db.getAllHonoraires();
+  return honoraires.reduce((sum, h) => sum + h.Montant, 0);
+});
 
 // ---------------------------
 // Save personnel photo (non-blocking)
@@ -140,6 +152,37 @@ ipcMain.handle('save-photo', async (event, { file, CIN }) => {
     return null;
   }
 });
+
+// ---------------------------
+// Patients & Appointments
+// ---------------------------
+
+// Get appointments for a specific date
+
+// Get appointments between two dates (for weekly view)
+ipcMain.handle('get-appointments', (event, { startDate, endDate }) => {
+  return db.getAppointmentsBetween(startDate, endDate);
+});
+
+// Get single appointment by ID
+ipcMain.handle('get-appointment', (event, IDRv) => db.getAppointmentById(IDRv));
+
+// Create new appointment
+ipcMain.handle('create-appointment', (event, appt) => {
+  // ensure TypePatient field is always present to avoid SQLITE_ERROR
+  appt.TypePatient = appt.TypePatient || "";
+  return db.addAppointment(appt);
+});
+
+// Update existing appointment
+ipcMain.handle('update-appointment', (event, appt) => {
+  appt.TypePatient = appt.TypePatient || "";
+  return db.updateAppointment(appt);
+});
+
+// Delete appointment
+ipcMain.handle('delete-appointment', (event, IDRv) => db.deleteAppointmentById(IDRv));
+
 // ---------------------------
 // Open dashboard based on role
 // ---------------------------
@@ -147,11 +190,11 @@ ipcMain.on('open-dashboard', (event, role) => {
   if (!mainWindow) return;
   let page;
   switch (role) {
-    case 'admin': page = path.join(__dirname, 'renderer', 'admin.html'); break;
+    case 'admin': page = path.join(__dirname, 'renderer', 'index.html'); break;
     case 'doctor': page = path.join(__dirname, 'renderer', 'doctor.html'); break;
     case 'secretary': page = path.join(__dirname, 'renderer', 'secretary.html'); break;
     case 'finance': page = path.join(__dirname, 'renderer', 'finance.html'); break;
-    default: page = path.join(__dirname, 'renderer', 'dashboard.html');
+    default: page = path.join(__dirname, 'renderer', 'gest.html');
   }
   mainWindow.loadFile(page);
 });

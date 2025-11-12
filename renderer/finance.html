@@ -1,0 +1,26 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8">
+  <title>Tableau de bord - Finance</title>
+</head>
+<body>
+  <h1>Bienvenue Service Financier</h1>
+  <button id="logoutBtn">Se déconnecter</button>
+
+  <script>
+    window.addEventListener('DOMContentLoaded', async () => {
+      const user = await window.electronAPI.getCurrentUser();
+      if (!user || user.Droit.toLowerCase() !== 'finance') {
+        alert('⛔ Accès refusé.');
+        window.location.replace('login.html');
+        return;
+      }
+    });
+
+    document.getElementById('logoutBtn').addEventListener('click', () => {
+      window.electronAPI.logout();
+    });
+  </script>
+</body>
+</html>

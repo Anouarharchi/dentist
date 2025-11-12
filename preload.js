@@ -1,4 +1,4 @@
-const { contextBridge, ipcRenderer } = require('electron');
+const { contextBridge, ipcRenderer } = require('electron'); 
 
 contextBridge.exposeInMainWorld('electronAPI', {
   // ---------------------------
@@ -32,6 +32,12 @@ contextBridge.exposeInMainWorld('electronAPI', {
   // Ordonnance
   // ---------------------------
   addOrdonnance: (o) => ipcRenderer.invoke('add-ordonnance', o),
+  // Appointments advanced
+  getAppointments: ({ startDate, endDate }) => ipcRenderer.invoke('get-appointments', { startDate, endDate }),
+  getAppointment: (IDRv) => ipcRenderer.invoke('get-appointment', IDRv),
+  createAppointment: (appt) => ipcRenderer.invoke('create-appointment', appt),
+  updateAppointment: (appt) => ipcRenderer.invoke('update-appointment', appt),
+  deleteAppointment: (IDRv) => ipcRenderer.invoke('delete-appointment', IDRv),
 
   // ---------------------------
   // Honoraire
@@ -63,5 +69,11 @@ contextBridge.exposeInMainWorld('electronAPI', {
   // ---------------------------
   // Historique / Logging
   // ---------------------------
-  logOperation: (log) => ipcRenderer.invoke('log-operation', log)
+  logOperation: (log) => ipcRenderer.invoke('log-operation', log),
+
+  // ---------------------------
+  // Dashboard Cards
+  // ---------------------------
+  getPatientsCount: () => ipcRenderer.invoke('get-patients-count'), // Returns total number of patients
+  getIncome: () => ipcRenderer.invoke('get-income')                // Returns total income
 });
