@@ -37,7 +37,7 @@ db.serialize(() => {
   db.run(`CREATE TABLE IF NOT EXISTS RendezVous (
     IDRv INTEGER PRIMARY KEY AUTOINCREMENT,
     IDP INTEGER, DateRv TEXT, HeureRv TEXT, Statut TEXT,
-    TypePatient TEXT, NomPrenom TEXT, Email TEXT,
+    TypePatient TEXT, NomPrenom TEXT, Email TEXT,CIN TEXT,
     FOREIGN KEY(IDP) REFERENCES Patients(IDP)
   )`);
 
@@ -231,8 +231,8 @@ function getAppointmentById(IDRv) {
 function addAppointment(appt) {
   return new Promise((resolve, reject) => {
     const sql = `INSERT INTO RendezVous 
-      (IDP, DateRv, HeureRv, Statut, TypePatient, NomPrenom, Email)
-      VALUES (?, ?, ?, ?, ?, ?, ?)`;
+      (IDP, DateRv, HeureRv, Statut, TypePatient, NomPrenom, Email,CIN)
+      VALUES (?, ?, ?, ?, ?, ?, ?,?)`;
     const params = [
       appt.IDP || null,
       appt.DateRv || new Date().toISOString().split('T')[0],
@@ -240,7 +240,8 @@ function addAppointment(appt) {
       appt.Statut || "Planifié",
       appt.TypePatient || "",
       appt.NomPrenom || "",
-      appt.Email || ""
+      appt.Email || "",
+      appt.CIN || ""
     ];
     db.run(sql, params, function(err) {
       if (err) reject(err);
@@ -252,8 +253,8 @@ function addAppointment(appt) {
 function updateAppointment(appt) {
   return new Promise((resolve, reject) => {
     const sql = `UPDATE RendezVous
-      SET IDP = ?, DateRv = ?, HeureRv = ?, Statut = ?, TypePatient = ?, NomPrenom = ?, Email = ?
-      WHERE IDRv = ?`;
+      SET IDP = ?, DateRv = ?, HeureRv = ?, Statut = ?, TypePatient = ?, NomPrenom = ?, Email = ?, CIN = ?
+      WHERE IDRv = ? `;
     const params = [
       appt.IDP || null,
       appt.DateRv || new Date().toISOString().split('T')[0],
@@ -262,6 +263,7 @@ function updateAppointment(appt) {
       appt.TypePatient || "",
       appt.NomPrenom || "",
       appt.Email || "",
+      appt.CIN || "",
       appt.IDRv
     ];
     db.run(sql, params, function(err) {
@@ -353,24 +355,24 @@ function getConsultationById(id) {
   });
 }
 
-function addConsultation(data) {
-  const sql = `
-    INSERT INTO Consultation 
-    (IDP, CIN, Motif, Diagnostic, Observations, Remarques, NomMedecin, 
-     PiècesJointes_FileData, PiècesJointes_FileName, PiècesJointes_FileType)
-    VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
-  `;
-  return new Promise((resolve, reject) => {
-    db.run(sql, [
-      data.IDP, data.CIN, data.Motif, data.Diagnostic, data.Observations,
-      data.Remarques, data.NomMedecin,
-      data.FileData, data.FileName, data.FileType
-    ], function (err) {
-      if (err) reject(err);
-      else resolve({ IDC: this.lastID });
-    });
-  });
-}
+// function addConsultation(data) {
+//   const sql = `
+//     INSERT INTO Consultation 
+//     (IDP, CIN, Motif, Diagnostic, Observations, Remarques, NomMedecin, 
+//      PiècesJointes_FileData, PiècesJointes_FileName, PiècesJointes_FileType)
+//     VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+//   `;
+//   return new Promise((resolve, reject) => {
+//     db.run(sql, [
+//       data.IDP, data.CIN, data.Motif, data.Diagnostic, data.Observations,
+//       data.Remarques, data.NomMedecin,
+//       data.FileData, data.FileName, data.FileType
+//     ], function (err) {
+//       if (err) reject(err);
+//       else resolve({ IDC: this.lastID });
+//     });
+//   });
+// }
 
 function addConsultation(c) {
   return new Promise((resolve, reject) => {
@@ -506,18 +508,22 @@ function addHistoriqueDate(log) {
 }
 function getPatientForDoc(idp) {
   return new Promise((resolve, reject) => {
-    // نستخدم Number(idp) داخل الدالة لضمان التوافق مع string أو number
-    const nid = Number(idp);
-    if (Number.isNaN(nid)) {
-      // لو المعطى ليس عدد صحيح نرجع null
-      return resolve(null);
-    }
-    db.get('SELECT * FROM Patients WHERE IDP = ?', [nid], (err, row) => {
-      if (err) return reject(err);
-      resolve(row || null);
+    db.get('SELECT * FROM Patients WHERE IDP = ?', [idp], (err, row) => {
+      if (err) reject(err);
+      else resolve(row);
     });
   });
 }
+
+function getPatientByCIN(cin) {
+    return new Promise((resolve, reject) => {
+      const sql = `SELECT * FROM Patients WHERE CIN = ?`;
+      db.get(sql, [cin], (err, row) => {
+        if (err) reject(err);
+        else resolve(row);
+      });
+    });
+  }
 
 
 // =====================
@@ -552,5 +558,6 @@ module.exports = {
   addSuiviDoc,
   getRendezVousToday,
   getAllPatients,
-  getPatientForDoc
+  getPatientForDoc,
+  getPatientByCIN
 };

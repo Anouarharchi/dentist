@@ -178,14 +178,11 @@ ipcMain.handle('create-appointment', (event, appt) => {
   appt.TypePatient = appt.TypePatient || "";
   return db.addAppointment(appt);
 });
-ipcMain.handle('get-patient-for-doc', async (event, idp) => {
-  try {
-    return await dbModule.getPatientForDoc(idp);
-  } catch (e) {
-    console.error('get-patient-for-doc error', e);
-    throw e;
-  }
+ipcMain.handle("get-patient-for-doc", async (event, idp) => {
+    return await db.getPatientForDoc(idp); // دابا كترجع المريض بناءً على IDP
 });
+
+
 // Update existing appointment
 ipcMain.handle('update-appointment', (event, appt) => {
   appt.TypePatient = appt.TypePatient || "";

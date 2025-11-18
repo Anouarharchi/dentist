@@ -352,6 +352,10 @@
                 <input type="date" id="m_DateRv" value="${escapeHtml(appt.DateRv||'')}" />
               </div>
               <div class="form-col">
+                <label>CIN</label>
+                <input type="text" id="CIN" value="${escapeHtml(appt.CIN||'')}" />
+              </div>
+              <div class="form-col">
                 <label>Heure</label>
                 <input type="time" id="m_HeureRv" value="${escapeHtml(appt.HeureRv||'')}" />
               </div>
@@ -409,7 +413,8 @@
           TypePatient: document.getElementById('m_Type').value,
           Statut: document.getElementById('m_Statut').value,
           DateRv: document.getElementById('m_DateRv').value,
-          HeureRv: document.getElementById('m_HeureRv').value
+          HeureRv: document.getElementById('m_HeureRv').value,
+          CIN: document.getElementById('CIN').value,
         };
 
         try{
