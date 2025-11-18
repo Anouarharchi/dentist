@@ -8,7 +8,7 @@
   "type": "commonjs",
   "scripts": {
     "start": "electron .",
-    "dev": "electron .",
+    "dev": "electronmon .",
     "build": "electron-builder"
   },
   "dependencies": {
@@ -20,10 +20,12 @@
     "bootstrap": "^5.3.3",
     "electron": "^30.0.0",
     "fullcalendar": "^6.1.19",
+    "pdfkit": "^0.17.2",
     "sqlite3": "^5.1.7"
   },
   "devDependencies": {
-    "electron-builder": "^24.13.3"
+    "electron-builder": "^24.13.3",
+    "electronmon": "^2.0.4"
   },
   "build": {
     "appId": "com.dentist.app",

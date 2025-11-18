@@ -94,7 +94,9 @@ ipcMain.handle('delete-personnel', (event, id) => db.deletePersonnel(id));
 // ---------------------------
 // Patients & Appointments
 // ---------------------------
-ipcMain.handle('get-patients', () => db.getPatients());
+ipcMain.handle('get-patients', async () => {
+  return await db.getPatients(); // returns array of patients
+});
 ipcMain.handle('add-patient', (event, patient) => db.addPatient(patient));
 ipcMain.handle('get-appointments-by-date', (event, date) => db.getAppointmentsByDate(date));
 ipcMain.handle('add-appointment', (event, appt) => db.addAppointment(appt));
@@ -156,6 +158,9 @@ ipcMain.handle('save-photo', async (event, { file, CIN }) => {
 // ---------------------------
 // Patients & Appointments
 // ---------------------------
+ipcMain.handle("update-patient", async (_, data) => {
+    return await updatePatientInDB(data);
+});
 
 // Get appointments for a specific date
 
@@ -173,7 +178,14 @@ ipcMain.handle('create-appointment', (event, appt) => {
   appt.TypePatient = appt.TypePatient || "";
   return db.addAppointment(appt);
 });
-
+ipcMain.handle('get-patient-for-doc', async (event, idp) => {
+  try {
+    return await dbModule.getPatientForDoc(idp);
+  } catch (e) {
+    console.error('get-patient-for-doc error', e);
+    throw e;
+  }
+});
 // Update existing appointment
 ipcMain.handle('update-appointment', (event, appt) => {
   appt.TypePatient = appt.TypePatient || "";

@@ -3,10 +3,115 @@
 <head>
   <meta charset="UTF-8">
   <link rel="stylesheet" href="style.css">
+
+  <!-- ====== MENU.HTML CSS (unchanged) ====== -->
+  <style>
+    body {
+      margin: 0;
+      font-family: Arial, sans-serif;
+    }
+
+    .sidebar {
+      width: 220px;
+      height: 100vh;
+      background-color: #1e90ff;
+      color: white;
+      display: flex;
+      flex-direction: column;
+    }
+
+    .logo {
+      padding: 20px;
+      font-size: 20px;
+      font-weight: bold;
+      text-align: center;
+      border-bottom: 1px solid rgba(255,255,255,0.3);
+    }
+
+    .menu {
+      list-style: none;
+      padding: 0;
+      margin: 0;
+      flex: 1;
+    }
+
+    .menu li {
+      padding: 12px 20px;
+      cursor: pointer;
+      transition: background-color 0.3s;
+    }
+
+    .menu li:hover {
+      background-color: #187bcd;
+    }
+
+    .menu li.active {
+      background-color: #104e8b;
+      font-weight: bold;
+      border-left: 4px solid #fff;
+    }
+  </style>
 </head>
+
 <body>
-  <div id="sidebar-container"></div>
+
+  <!-- ========== MERGED SIDEBAR (menu.html) ========== -->
+  <div class="sidebar" id="sidebar-container">
+    <div class="logo">Clinic Admin</div>
+    <ul class="menu">
+      <li data-page="dashboard.html" class="active">Dashboard</li>
+      <li data-page="patients.html">Patients</li>
+      <li data-page="dentists.html">Dentists</li>
+      <li data-page="appointments.html">Appointments</li>
+      <li data-page="sessions.html">Sessions</li>
+      <li data-page="settings.html">Settings</li>
+    </ul>
+  </div>
+
+  <!-- Main content -->
   <div class="main" id="main-content"></div>
-  <script src="index.js"></script>
+
+  <!-- ========== MERGED SCRIPTS ========== -->
+  <script>
+    // ========== MENU.HTML JS (unchanged) ==========
+    const menuItems = document.querySelectorAll('.menu li');
+
+    menuItems.forEach(item => {
+      item.addEventListener('click', () => {
+
+        // Remove active from all
+        menuItems.forEach(i => i.classList.remove('active'));
+
+        // Add active to clicked item
+        item.classList.add('active');
+
+        // Load page content (from index.js)
+        const page = item.dataset.page;
+        loadPage(page);
+      });
+    });
+
+    // ========== INDEX.JS CODE (unchanged) ==========
+
+    // 🧭 Load content by page
+    function loadPage(page) {
+      fetch(page)
+        .then(res => res.text())
+        .then(html => {
+          document.getElementById('main-content').innerHTML = html;
+
+          // Initialize JS logic per page
+          switch(page) {
+            case 'dashboard.html':
+              import('./dashboard.js').then(module => module.initDashboard());
+              break;
+          }
+        });
+    }
+
+    // Default initial page load
+    loadPage('dashboard.html');
+  </script>
+
 </body>
 </html>

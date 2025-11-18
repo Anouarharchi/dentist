@@ -14,7 +14,7 @@ export async function initDashboard() {
   const cancelBtn = document.getElementById('cancelBtn');
 
   // =========================
-  // 🔹 Dashboard cards logic
+  // 🔹 Dashboad cards logic
   // =========================
 async function updateCards() {
   try {

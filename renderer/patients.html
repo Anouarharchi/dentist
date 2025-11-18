@@ -1,0 +1,69 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<title>Patients</title>
+<style>
+  h2 { margin-bottom:10px; }
+  input#searchInput { width:300px; padding:6px; margin-bottom:10px; }
+  table { width:100%; border-collapse: collapse; background:#fff; }
+  th, td { border:1px solid #ccc; padding:8px; text-align:left; }
+  th { background:#1e90ff; color:#fff; }
+</style>
+</head>
+<body>
+
+<h2>Patients</h2>
+<input type="text" id="searchInput" placeholder="Rechercher un patient...">
+<table>
+  <thead>
+    <tr>
+      <th>Nom</th>
+      <th>Prénom</th>
+      <th>CIN</th>
+      <th>Téléphone</th>
+      <th>Ville</th>
+    </tr>
+  </thead>
+  <tbody id="patientsTbody"></tbody>
+</table>
+
+<script>
+    function escapeHtml(s){ if(!s&&s!==0) return ''; return String(s).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c])); }
+
+
+async function loadPatients(search="") {
+  if(!window.electronAPI) return;
+  let patients = await window.electronAPI.getPatients() || [];
+  if(search) {
+    const q = search.toLowerCase();
+    patients = patients.filter(p =>
+      (p.Nom || "").toLowerCase().includes(q) ||
+      (p.Prenom || "").toLowerCase().includes(q) ||
+      (p.CIN || "").toLowerCase().includes(q)
+    );
+  }
+
+  const tbody = document.getElementById("patientsTbody");
+  tbody.innerHTML = patients.map(p => `
+    <tr>
+      <td>${escapeHtml(p.Nom)}</td>
+      <td>${escapeHtml(p.Prenom)}</td>
+      <td>${escapeHtml(p.CIN)}</td>
+      <td>${escapeHtml(p.Tel)}</td>
+      <td>${escapeHtml(p.Ville)}</td>
+    </tr>
+  `).join("");
+}
+
+document.getElementById("searchInput").addEventListener("input", e => {
+  loadPatients(e.target.value);
+});
+
+// Initial load
+window.addEventListener('DOMContentLoaded', () => {
+  loadPatients();
+});
+</script>
+</body>
+</html>

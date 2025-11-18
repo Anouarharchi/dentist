@@ -129,6 +129,28 @@ db.serialize(() => {
 
 
 
+function updatePatientInDB(p) {
+  return run(`
+    UPDATE Patients SET 
+      Nom=?,
+      Prenom=?,
+      CIN=?,
+      DateNaissance=?,
+      Tel=?,
+      Email=?,
+      Adresse=?,
+      Ville=?,
+      Allergies=?,
+      Remarques=?
+    WHERE IDP=?
+  `, [
+    p.Nom, p.Prenom, p.CIN,
+    p.DateNaissance, p.Tel, p.Email,
+    p.Adresse, p.Ville,
+    p.Allergies, p.Remarques,
+    p.IDP
+  ]);
+}
 
 
 function getAllHonoraires() {
@@ -141,6 +163,22 @@ function getAllHonoraires() {
 }
 
 // --- Patients ---
+function getAllPatients() {
+  return new Promise((resolve, reject) => {
+    db.all("SELECT * FROM Patients", [], (err, rows) => {
+      if (err) reject(err);
+      else resolve(rows);
+    });
+  });
+}
+function getPatientById(id) {
+  return new Promise((resolve, reject) => {
+    db.get("SELECT * FROM Patients WHERE IDP = ?", [id], (err, row) => {
+      if (err) reject(err);
+      else resolve(row);
+    });
+  });
+}
 function getPatients() {
   return new Promise((resolve, reject) => {
     db.all('SELECT * FROM Patients', [], (err, rows) => {
@@ -297,6 +335,43 @@ function deletePersonnel(id) {
 }
 
 // --- Consultation ---
+function getConsultations() {
+  return new Promise((resolve, reject) => {
+    db.all("SELECT * FROM Consultation", [], (err, rows) => {
+      if (err) reject(err);
+      else resolve(rows);
+    });
+  });
+}
+
+function getConsultationById(id) {
+  return new Promise((resolve, reject) => {
+    db.get("SELECT * FROM Consultation WHERE IDC = ?", [id], (err, row) => {
+      if (err) reject(err);
+      else resolve(row);
+    });
+  });
+}
+
+function addConsultation(data) {
+  const sql = `
+    INSERT INTO Consultation 
+    (IDP, CIN, Motif, Diagnostic, Observations, Remarques, NomMedecin, 
+     PiècesJointes_FileData, PiècesJointes_FileName, PiècesJointes_FileType)
+    VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+  `;
+  return new Promise((resolve, reject) => {
+    db.run(sql, [
+      data.IDP, data.CIN, data.Motif, data.Diagnostic, data.Observations,
+      data.Remarques, data.NomMedecin,
+      data.FileData, data.FileName, data.FileType
+    ], function (err) {
+      if (err) reject(err);
+      else resolve({ IDC: this.lastID });
+    });
+  });
+}
+
 function addConsultation(c) {
   return new Promise((resolve, reject) => {
     const sql = `INSERT INTO Consultation 
@@ -319,19 +394,39 @@ function getConsultationsByPatient(IDP) {
 }
 
 // --- Ordonnance ---
-function addOrdonnance(o) {
+// function addOrdonnance(o) {
+//   return new Promise((resolve, reject) => {
+//     const sql = `INSERT INTO Ordonnance 
+//       (IDC, IDP, Medicament1, Posologie1, Duree1, Medicament2, Posologie2, Duree2, Medicament3, Posologie3, Duree3, Remarques)
+//       VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`;
+//     const params = [o.IDC, o.IDP, o.Medicament1, o.Posologie1, o.Duree1, o.Medicament2, o.Posologie2, o.Duree2, o.Medicament3, o.Posologie3, o.Duree3, o.Remarques];
+//     db.run(sql, params, function(err) {
+//       if (err) reject(err);
+//       else resolve(this.lastID);
+//     });
+//   });
+// }
+function addOrdonnance(data) {
+  const sql = `
+    INSERT INTO Ordonnance
+    (IDC, IDP, Medicament1, Posologie1, Duree1,
+     Medicament2, Posologie2, Duree2,
+     Medicament3, Posologie3, Duree3, Remarques)
+    VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+  `;
   return new Promise((resolve, reject) => {
-    const sql = `INSERT INTO Ordonnance 
-      (IDC, IDP, Medicament1, Posologie1, Duree1, Medicament2, Posologie2, Duree2, Medicament3, Posologie3, Duree3, Remarques)
-      VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`;
-    const params = [o.IDC, o.IDP, o.Medicament1, o.Posologie1, o.Duree1, o.Medicament2, o.Posologie2, o.Duree2, o.Medicament3, o.Posologie3, o.Duree3, o.Remarques];
-    db.run(sql, params, function(err) {
+    db.run(sql, [
+      data.IDC, data.IDP,
+      data.M1, data.P1, data.D1,
+      data.M2, data.P2, data.D2,
+      data.M3, data.P3, data.D3,
+      data.Remarques
+    ], function (err) {
       if (err) reject(err);
-      else resolve(this.lastID);
+      else resolve({ IDR: this.lastID });
     });
   });
 }
-
 // --- Honoraire ---
 function addHonoraire(h) {
   return new Promise((resolve, reject) => {
@@ -358,6 +453,15 @@ function addReglement(r) {
   });
 }
 
+function getRendezVousToday() {
+  const today = new Date().toISOString().split("T")[0]; 
+  return new Promise((resolve, reject) => {
+    db.all("SELECT * FROM RendezVous WHERE DateRv = ?", [today], (err, rows) => {
+      if (err) reject(err);
+      else resolve(rows);
+    });
+  });
+}
 // --- Historique ---
 function addHistorique(entry) {
   return new Promise((resolve, reject) => {
@@ -365,6 +469,28 @@ function addHistorique(entry) {
     db.run(sql, [entry.Mat, entry.Date_E, entry.Action], function(err) {
       if (err) return reject(err);
       resolve(this.lastID);
+    });
+  });
+}
+function addSuiviDoc(data) {
+  const sql = `
+    INSERT INTO Suivi_doc
+    (RefDocument, Fournisseur, Date_S, Date_R, Mode_R, Montant, Saisie, Compatibilite,
+     ImageDoc_FileData, ImageDoc_FileName, ImageDoc_FileType,
+     ImageJustificatif_FileData, ImageJustificatif_FileName, ImageJustificatif_FileType,
+     Observation)
+    VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+  `;
+  return new Promise((resolve, reject) => {
+    db.run(sql, [
+      data.Ref, data.Fournisseur, data.DateS, data.DateR, data.ModeR,
+      data.Montant, data.Saisie, data.Compatibilite,
+      data.Img1Data, data.Img1Name, data.Img1Type,
+      data.Img2Data, data.Img2Name, data.Img2Type,
+      data.Observation
+    ], function (err) {
+      if (err) reject(err);
+      else resolve({ IDSuivi: this.lastID });
     });
   });
 }
@@ -378,6 +504,21 @@ function addHistoriqueDate(log) {
     });
   });
 }
+function getPatientForDoc(idp) {
+  return new Promise((resolve, reject) => {
+    // نستخدم Number(idp) داخل الدالة لضمان التوافق مع string أو number
+    const nid = Number(idp);
+    if (Number.isNaN(nid)) {
+      // لو المعطى ليس عدد صحيح نرجع null
+      return resolve(null);
+    }
+    db.get('SELECT * FROM Patients WHERE IDP = ?', [nid], (err, row) => {
+      if (err) return reject(err);
+      resolve(row || null);
+    });
+  });
+}
+
 
 // =====================
 // 📦 Exports
@@ -403,5 +544,13 @@ module.exports = {
   getAppointmentsBetween,
   getAppointmentById,
   updateAppointment,
-  deleteAppointmentById
+  deleteAppointmentById,
+  updatePatientInDB,
+  getPatientById,
+  getConsultationById,
+  getConsultations,
+  addSuiviDoc,
+  getRendezVousToday,
+  getAllPatients,
+  getPatientForDoc
 };

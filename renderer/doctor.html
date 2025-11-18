@@ -1,26 +1,1150 @@
 <!DOCTYPE html>
 <html lang="fr">
 <head>
-  <meta charset="UTF-8">
-  <title>Tableau de bord - Docteur</title>
+  <meta charset="utf-8" />
+  <title>Tableau de bord - Dentiste</title>
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <style>
+    /* ===== Global ===== */
+    *{box-sizing:border-box;margin:0;padding:0;font-family: "Segoe UI", Roboto, Arial, sans-serif}
+    html,body{height:100%;background:#f3f4f6;color:#222}
+    :root{
+      --sidebar-bg:#1f2937;
+      --accent:#0ea5a4;
+      --muted:#6b7280;
+      --card-bg:#fff;
+      --danger:#ef4444;
+      --success:#10b981;
+    }
+
+    /* ===== Layout ===== */
+    .app{display:flex;height:100vh;overflow:hidden}
+    .sidebar{
+      width:240px;background:var(--sidebar-bg);color:#fff;display:flex;flex-direction:column;padding:18px 12px;
+      box-shadow:2px 0 6px rgba(0,0,0,0.12)
+    }
+    .brand{font-weight:700;text-align:center;padding:8px 6px;margin-bottom:8px;letter-spacing:0.4px}
+    .role{font-size:13px;color:rgba(255,255,255,0.7);text-align:center;margin-bottom:10px}
+    .menu{flex:1;overflow:auto;margin-top:6px}
+    .menu-item{padding:12px 16px;border-radius:6px;color:#e6eef0;margin-bottom:6px;cursor:pointer;display:flex;align-items:center;justify-content:space-between}
+    .menu-item:hover{background:rgba(255,255,255,0.04)}
+    .menu-item.active{background:linear-gradient(90deg, rgba(255,255,255,0.04), rgba(255,255,255,0.02));border-left:4px solid var(--accent);color:#fff}
+    .logout-btn{background:var(--danger);border:none;color:#fff;padding:10px;border-radius:6px;cursor:pointer;margin-top:10px}
+    .sidebar-footer{font-size:12px;color:rgba(255,255,255,0.6);margin-top:12px;text-align:center}
+
+    .main{
+      flex:1;display:flex;min-width:0;flex-direction:row;overflow:hidden
+    }
+
+    .main-content{flex:1;padding:18px;overflow:auto;display:flex;flex-direction:column;min-width:0}
+    .header{display:flex;align-items:center;justify-content:space-between;margin-bottom:14px;gap:12px}
+    .header-left{display:flex;flex-direction:column}
+    .title{font-size:18px;font-weight:700;color:#111}
+    .subtitle{font-size:13px;color:var(--muted);margin-top:4px}
+
+    .controls{display:flex;gap:8px;align-items:center}
+    .btn{padding:8px 10px;border-radius:6px;border:none;cursor:pointer;background:#e6eef0}
+    .btn.primary{background:var(--accent);color:#fff}
+    .btn.warn{background:#fbbf24}
+    .btn.danger{background:var(--danger);color:#fff}
+
+    .content-area{background:var(--card-bg);border-radius:10px;padding:14px;box-shadow:0 6px 18px rgba(16,24,40,0.04);min-height:0;flex:1;overflow:auto}
+
+    /* ===== Dashboard: today's appointments ===== */
+    .today-list{display:flex;flex-direction:column;gap:10px}
+    .appt-card{display:flex;gap:12px;align-items:flex-start;padding:12px;border-radius:8px;border:1px solid #eef2f7;background:#fff}
+    .appt-time{min-width:78px;font-weight:700;color:#0f172a}
+    .appt-meta{flex:1}
+    .appt-actions{display:flex;gap:6px}
+
+    /* ===== Table generic ===== */
+    .table{width:100%;border-collapse:collapse;font-size:14px}
+    .table th,.table td{padding:10px;border-bottom:1px solid #eef2f7;text-align:left}
+    .table th{background:#fafafa;font-weight:600;color:#374151}
+    .small{font-size:13px;color:var(--muted)}
+
+    /* ===== Forms & modal ===== */
+    .modal-backdrop{position:fixed;inset:0;background:rgba(0,0,0,0.45);display:flex;align-items:center;justify-content:center;z-index:2000}
+    .modal{width:880px;max-width:96%;max-height:90vh;overflow:auto;background:#fff;border-radius:10px;padding:16px}
+    .form-row{display:flex;gap:10px;margin-top:8px}
+    .form-col{flex:1;display:flex;flex-direction:column}
+    label{font-size:13px;color:#111;margin-bottom:6px}
+    input[type="text"],input[type="date"],input[type="time"],input[type="email"],select,textarea{padding:8px;border-radius:6px;border:1px solid #d1d5db;background:#fff}
+    textarea{min-height:90px;resize:vertical;padding-top:8px}
+    .actions{display:flex;gap:8px;justify-content:flex-end;margin-top:12px}
+
+    /* Right panel (optional) */
+    .right-panel{width:320px;border-left:1px solid #eef2f7;background:#fafafa;padding:14px;overflow:auto;flex-shrink:0}
+    .search-box{display:flex;gap:8px;margin-bottom:10px}
+    .patient-card{background:#fff;padding:10px;border-radius:8px;border:1px solid #eef2f7;margin-bottom:8px}
+
+    /* small helpers */
+    .muted{color:var(--muted)}
+    .pill{padding:6px 8px;border-radius:999px;font-size:12px;border:1px solid rgba(0,0,0,0.06)}
+    .file-preview{display:flex;gap:8px;flex-wrap:wrap;margin-top:8px}
+    .file-item{padding:8px;border-radius:6px;border:1px solid #e6e6e6;background:#fff;font-size:13px}
+    .badge{padding:4px 8px;border-radius:6px;font-size:12px;color:#fff}
+
+    @media (max-width: 900px){
+      .right-panel{display:none}
+      .sidebar{width:64px}
+      .brand{font-size:12px}
+      .menu-item .label {display:none}
+    }
+
+  </style>
 </head>
 <body>
-  <h1>Bienvenue Docteur</h1>
-  <button id="logoutBtn">Se déconnecter</button>
+  <div class="app">
+    <aside class="sidebar">
+      <div class="brand">Cabinet — Dentiste</div>
+      <div class="role" id="userNameRole">Dentiste</div>
+
+      <nav class="menu" id="menu">
+        <div class="menu-item active" data-page="dashboard"><span class="label">Dashboard (Aujourd'hui)</span><span class="count" id="cntToday"></span></div>
+        <div class="menu-item" data-page="patients"><span class="label">Patients</span></div>
+        <div class="menu-item" data-page="consultations"><span class="label">Consultations</span></div>
+        <div class="menu-item" data-page="ordonnances"><span class="label">Ordonnances</span></div>
+        <div class="menu-item" data-page="suivi"><span class="label">Suivi Documents</span></div>
+        <div class="menu-item" data-page="settings"><span class="label">Paramètres</span></div>
+      </nav>
+
+      <button id="logoutBtn" class="logout-btn">Se déconnecter</button>
+      <div class="sidebar-footer small" style="margin-top:auto">Version 1.0 — Local</div>
+    </aside>
+
+    <main class="main">
+      <section class="main-content">
+        <div class="header">
+          <div class="header-left">
+            <div class="title" id="pageTitle">Dashboard</div>
+            <div class="subtitle" id="pageSubtitle">Vue globale du jour</div>
+          </div>
+          <div class="controls">
+            <button id="refreshBtn" class="btn">⟳ Refresh</button>
+            <button id="newApptBtn" class="btn primary">+ Nouveau RDV</button>
+          </div>
+        </div>
+
+        <div class="content-area" id="contentArea">
+          <!-- dynamic content here -->
+        </div>
+      </section>
+
+      <aside class="right-panel">
+        <div class="search-box">
+          <input type="text" id="searchInput" placeholder="Rechercher patient par nom..." />
+          <button id="searchBtn" class="btn">🔍</button>
+        </div>
+        <div id="searchResult"></div>
+
+        <hr style="margin:12px 0"/>
+
+        <div>
+          <h4 style="margin-bottom:8px">Raccourcis</h4>
+          <button class="btn" id="goPatients">Aller aux Patients</button>
+          <button class="btn" id="goConsult">Aller aux Consultations</button>
+        </div>
+
+      </aside>
+    </main>
+  </div>
+
+  <div id="modalRoot" style="display:none;"></div>
+
+  <!-- jsPDF for export (if needed) -->
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
 
   <script>
-    window.addEventListener('DOMContentLoaded', async () => {
+    /**************************************************************************
+     * Dentist frontend logic
+     * - uses window.electronAPI.* to interact with main process
+     * - assumes current user has Droit === 'doctor'
+     **************************************************************************/
+
+    // small helpers
+    const $ = id => document.getElementById(id);
+    const escapeHtml = s => { if(s===null||s===undefined) return ''; return String(s).replace(/[&<>"']/g, c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c])); };
+    const todayISO = () => new Date().toISOString().split('T')[0];
+
+    // Keep caches
+    let patientsCache = [];
+    let apptsCache = [];
+    let consultationsCache = [];
+    let ordonnancesCache = [];
+    let suiviCache = [];
+
+    // Menu navigation
+    document.addEventListener('DOMContentLoaded', async () => {
+      // Auth check (doctor)
       const user = await window.electronAPI.getCurrentUser();
-      if (!user || user.Droit.toLowerCase() !== 'doctor') {
-        alert('⛔ Accès refusé.');
+      if(!user || (user.Droit || '').toLowerCase() !== 'doctor'){
+        alert('⛔ Accès refusé — vous devez être connecté comme doctor');
         window.location.replace('login.html');
         return;
       }
+      $('userNameRole').textContent = (user.Nom || 'Dentiste') + ' — ' + (user.Droit || 'doctor');
+
+      // wired events
+      document.querySelectorAll('.menu-item').forEach(el => {
+        el.addEventListener('click', () => {
+          document.querySelectorAll('.menu-item').forEach(x=>x.classList.remove('active'));
+          el.classList.add('active');
+          const page = el.dataset.page;
+          navigateTo(page);
+        });
+      });
+
+      $('logoutBtn').addEventListener('click', () => window.electronAPI.logout());
+      $('refreshBtn').addEventListener('click', () => reloadCurrentPage());
+      $('newApptBtn').addEventListener('click', () => openCreateApptModal());
+      $('searchBtn').addEventListener('click', searchPatient);
+      $('searchInput').addEventListener('keydown', e => { if(e.key==='Enter') searchPatient(); });
+      $('goPatients').addEventListener('click', () => navigateTo('patients'));
+      $('goConsult').addEventListener('click', () => navigateTo('consultations'));
+
+      // initial load
+      await loadAllCaches();
+      navigateTo('dashboard');
     });
 
-    document.getElementById('logoutBtn').addEventListener('click', () => {
-      window.electronAPI.logout();
-    });
+    async function loadAllCaches(){
+      // load patients & consultations & ordonnances & suivi
+      try{
+        patientsCache = await window.electronAPI.getPatients() || [];
+      }catch(e){ console.error('getPatients err',e); patientsCache = []; }
+
+      try{
+        consultationsCache = await window.electronAPI.getConsultations() || [];
+      }catch(e){ console.error('getConsultations err',e); consultationsCache=[]; }
+
+      try{
+        ordonnancesCache = await window.electronAPI.getOrdonnances() || [];
+      }catch(e){ console.error('getOrdonnances err',e); ordonnancesCache=[]; }
+
+      try{
+        suiviCache = await window.electronAPI.getSuiviDocs() || [];
+      }catch(e){ console.error('getSuiviDocs err',e); suiviCache=[]; }
+
+      await loadTodayAppointments();
+    }
+
+    async function loadTodayAppointments(){
+      const today = todayISO();
+      try{
+        apptsCache = await window.electronAPI.getAppointments({ startDate: today, endDate: today }) || [];
+      }catch(e){ console.error('getAppointments err',e); apptsCache = []; }
+      $('cntToday').textContent = apptsCache.length ? ` (${apptsCache.length})` : '';
+    }
+
+    let currentPage = null;
+    function navigateTo(page){
+      currentPage = page;
+      if(page==='dashboard') renderDashboard();
+      else if(page==='patients') renderPatientsPage();
+      else if(page==='consultations') renderConsultationsPage();
+      else if(page==='ordonnances') renderOrdonnancesPage();
+      else if(page==='suivi') renderSuiviPage();
+      else if(page==='settings') renderSettings();
+    }
+
+    function reloadCurrentPage(){ loadAllCaches().then(()=> navigateTo(currentPage || 'dashboard')); }
+
+    /* ===================== DASHBOARD (RDV du jour) ===================== */
+    function renderDashboard(){
+      $('pageTitle').textContent = 'Dashboard — Rendez-Vous du jour';
+      $('pageSubtitle').textContent = `Liste des rendez-vous pour aujourd'hui — ${todayISO()}`;
+      const area = $('contentArea');
+      area.innerHTML = `<div>
+        <h3 style="margin-bottom:8px">Rendez-vous — Aujourd'hui</h3>
+        <div id="todayList" class="today-list"></div>
+      </div>`;
+
+      const listDiv = $('todayList');
+      if(!apptsCache.length){
+        listDiv.innerHTML = `<div class="small muted">Aucun RDV pour aujourd'hui.</div>`;
+        return;
+      }
+      // sort by time
+      const sorted = [...apptsCache].sort((a,b) => (a.HeureRv||'') > (b.HeureRv||'') ? 1 : -1);
+      listDiv.innerHTML = '';
+      sorted.forEach(a => {
+        const p = patientsCache.find(x=>x.IDP===a.IDP) || {};
+        const apptEl = document.createElement('div');
+        apptEl.className = 'appt-card';
+        apptEl.innerHTML = `
+          <div class="appt-time">${escapeHtml(a.HeureRv||'--:--')}</div>
+          <div class="appt-meta">
+            <div style="display:flex;align-items:center;gap:8px">
+              <div style="font-weight:700">${escapeHtml(a.NomPrenom || (p.Nom? (p.Nom+' '+(p.Prenom||'')) : 'Patient'))}</div>
+              <div class="small muted">${escapeHtml(p.CIN||a.CIN||'')}</div>
+              <div style="margin-left:auto"><span class="pill">${escapeHtml(a.Statut||'Planifié')}</span></div>
+            </div>
+            <div class="small muted" style="margin-top:8px">${escapeHtml(a.TypePatient||'--')}</div>
+            <div class="small" style="margin-top:8px">${escapeHtml(p.Tel||a.Email||'')}</div>
+          </div>
+          <div class="appt-actions">
+            <button class="btn" onclick="openPatientDetailsFromAppt(${a.IDP ?? 'null'})">Patient</button>
+            <button class="btn primary" onclick="openApptEdit(${a.IDRv})">Ouvrir</button>
+          </div>
+        `;
+        listDiv.appendChild(apptEl);
+      });
+    }
+
+  window.openPatientDetailsFromAppt = async function(idp){
+  try {
+    // التعامل مع قيم قد تأتي كـ 'null' أو null أو undefined أو string
+    if (idp === undefined || idp === null || idp === 'null') {
+      alert('Patient introuvable (no id provided)');
+      return;
+    }
+
+    // Convert to number safely
+    const numId = Number(idp);
+    if (Number.isNaN(numId)) {
+      alert('Patient introuvable (invalid id)');
+      return;
+    }
+
+    // Use the new API that queries DB directly for a single patient
+    const p = await window.electronAPI.getPatientForDoc(numId);
+
+    if (!p) {
+      alert('Patient introuvable');
+      return;
+    }
+
+    // openPatientDetailsModal موجود عندك — يبقى كما هو
+    openPatientDetailsModal(p);
+
+  } catch (err) {
+    console.error('Error opening patient details:', err);
+    alert('Erreur lors de l\'ouverture du patient. Regarde la console.');
+  }
+};
+
+
+    window.openApptEdit = async function(idrv){
+      try{
+        const appt = await window.electronAPI.getAppointment(Number(idrv));
+        if(!appt){ alert('RDV introuvable'); return; }
+        openApptModal(appt);
+      }catch(e){ console.error(e); alert('Erreur getAppointment'); }
+    };
+
+    /* ===================== APPOINTMENTS modal create/edit ===================== */
+    function openCreateApptModal(){
+      openApptModal({ IDRv:null, IDP:null, DateRv: todayISO(), HeureRv: '09:00', Statut: 'Planifié', TypePatient:'Consultation', NomPrenom:'', Email:''});
+    }
+
+    function openApptModal(appt){
+      const root = $('modalRoot');
+      root.style.display = 'block';
+      root.innerHTML = `
+        <div class="modal-backdrop">
+          <div class="modal" role="dialog" aria-modal="true">
+            <h3>${appt.IDRv? 'Modifier RDV':'Créer RDV'}</h3>
+
+            <div class="form-row">
+              <div class="form-col">
+                <label>Date</label>
+                <input type="date" id="m_DateRv" value="${escapeHtml(appt.DateRv||'')}" />
+              </div>
+              <div class="form-col">
+                <label>Heure</label>
+                <input type="time" id="m_HeureRv" value="${escapeHtml(appt.HeureRv||'')}" />
+              </div>
+            </div>
+
+            <div class="form-row">
+              <div class="form-col">
+                <label>Patient (ID ou Nom)</label>
+                <input type="text" id="m_Patient" placeholder="Saisir IDP ou Nom complet" value="${escapeHtml(appt.NomPrenom||'')}" />
+                <div class="small muted">Tu peux saisir l'IDP ou le nom complet; laisser vide pour patient inconnu.</div>
+              </div>
+              <div class="form-col">
+                <label>Email</label>
+                <input type="email" id="m_Email" value="${escapeHtml(appt.Email||'')}" />
+              </div>
+            </div>
+
+            <div class="form-row">
+              <div class="form-col">
+                <label>Type</label>
+                <select id="m_Type">
+                  <option ${appt.TypePatient==='Consultation'?'selected':''}>Consultation</option>
+                  <option ${appt.TypePatient==='Soins'?'selected':''}>Soins</option>
+                  <option ${appt.TypePatient==='Extraction'?'selected':''}>Extraction</option>
+                  <option ${appt.TypePatient==='Controle'?'selected':''}>Contrôle</option>
+                </select>
+              </div>
+              <div class="form-col">
+                <label>Statut</label>
+                <select id="m_Statut">
+                  <option ${appt.Statut==='Planifié'?'selected':''}>Planifié</option>
+                  <option ${appt.Statut==='Confirmé'?'selected':''}>Confirmé</option>
+                  <option ${appt.Statut==='Annulé'?'selected':''}>Annulé</option>
+                </select>
+              </div>
+            </div>
+
+            <div class="actions">
+              ${appt.IDRv? '<button id="delApptBtn" class="btn danger">Supprimer</button>' : ''}
+              <button id="cancelApptBtn" class="btn">Annuler</button>
+              <button id="saveApptBtn" class="btn primary">Enregistrer</button>
+            </div>
+          </div>
+        </div>
+      `;
+
+      root.querySelector('#cancelApptBtn').onclick = closeModal;
+      root.querySelector('#saveApptBtn').onclick = async () => {
+        // build payload
+        const payload = {
+          IDRv: appt.IDRv || null,
+          IDP: parseInt( (document.getElementById('m_Patient').value || '').trim() ) || null,
+          NomPrenom: document.getElementById('m_Patient').value.trim(),
+          Email: document.getElementById('m_Email').value.trim(),
+          TypePatient: document.getElementById('m_Type').value,
+          Statut: document.getElementById('m_Statut').value,
+          DateRv: document.getElementById('m_DateRv').value,
+          HeureRv: document.getElementById('m_HeureRv').value
+        };
+
+        try{
+          if(payload.IDRv){
+            await window.electronAPI.updateAppointment(payload);
+            alert('RDV modifié.');
+          }else{
+            await window.electronAPI.createAppointment(payload);
+            alert('RDV créé.');
+          }
+          closeModal();
+          await loadTodayAppointments();
+          navigateTo('dashboard');
+        }catch(e){ console.error(e); alert('Erreur enregistre RDV'); }
+      };
+
+      if(appt.IDRv){
+        root.querySelector('#delApptBtn').onclick = async () => {
+          if(!confirm('Supprimer ce RDV ?')) return;
+          try{
+            await window.electronAPI.deleteAppointment(Number(appt.IDRv));
+            alert('RDV supprimé.');
+            closeModal();
+            await loadTodayAppointments();
+            navigateTo('dashboard');
+          }catch(e){ console.error(e); alert('Erreur suppression RDV'); }
+        };
+      }
+    }
+
+    function closeModal(){
+      const root = $('modalRoot');
+      root.style.display = 'none';
+      root.innerHTML = '';
+    }
+
+    /* ===================== PATIENTS ===================== */
+    function renderPatientsPage(){
+      $('pageTitle').textContent = 'Patients';
+      $('pageSubtitle').textContent = 'Gérer la liste des patients';
+      const area = $('contentArea');
+      area.innerHTML = `
+        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px">
+          <h3>Patients</h3>
+          <div>
+            <button id="addPatientBtn" class="btn primary">+ Ajouter Patient</button>
+          </div>
+        </div>
+        <div style="overflow:auto">
+          <table class="table" id="patientsTable">
+            <thead><tr><th>Nom</th><th>Prénom</th><th>CIN</th><th>Téléphone</th><th>Ville</th><th>Actions</th></tr></thead>
+            <tbody id="patientsTbody"></tbody>
+          </table>
+        </div>
+      `;
+      renderPatientsTable();
+      document.getElementById('addPatientBtn').addEventListener('click', () => openPatientModal());
+    }
+
+    function renderPatientsTable(){
+      const tbody = $('patientsTbody');
+      const list = patientsCache || [];
+      if(!list.length){ tbody.innerHTML = `<tr><td colspan="6" class="small muted">Aucun patient</td></tr>`; return; }
+      tbody.innerHTML = list.map(p => `
+        <tr>
+          <td>${escapeHtml(p.Nom||'')}</td>
+          <td>${escapeHtml(p.Prenom||'')}</td>
+          <td>${escapeHtml(p.CIN||'')}</td>
+          <td>${escapeHtml(p.Tel||'')}</td>
+          <td>${escapeHtml(p.Ville||'')}</td>
+          <td>
+            <button class="btn" onclick="openPatientDetailsModalById(${p.IDP})">Détails</button>
+            <button class="btn" onclick="openPatientEditModal(${p.IDP})">Modifier</button>
+          </td>
+        </tr>
+      `).join('');
+    }
+
+    window.openPatientDetailsModalById = async function(idp){
+      const list = await window.electronAPI.getPatients();
+      const p = list.find(x=>x.IDP===idp);
+      openPatientDetailsModal(p);
+    }
+
+    function openPatientDetailsModal(p){
+      if(!p) return alert('Patient introuvable');
+      const root = $('modalRoot'); root.style.display='block';
+      root.innerHTML = `
+        <div class="modal-backdrop">
+          <div class="modal">
+            <h3>Détails Patient</h3>
+            <div style="display:flex;gap:16px">
+              <div style="flex:1">
+                <p><strong>Nom:</strong> ${escapeHtml(p.Nom)}</p>
+                <p><strong>Prénom:</strong> ${escapeHtml(p.Prenom)}</p>
+                <p><strong>CIN:</strong> ${escapeHtml(p.CIN)}</p>
+                <p><strong>Date Naissance:</strong> ${escapeHtml(p.DateNaissance)}</p>
+                <p><strong>Télé:</strong> ${escapeHtml(p.Tel)}</p>
+                <p><strong>Email:</strong> ${escapeHtml(p.Email)}</p>
+                <p><strong>Adresse:</strong> ${escapeHtml(p.Adresse)}</p>
+                <p><strong>Ville:</strong> ${escapeHtml(p.Ville)}</p>
+              </div>
+              <div style="flex:1">
+                <p><strong>Allergies:</strong> ${escapeHtml(p.Allergies)}</p>
+                <p><strong>Remarques:</strong> ${escapeHtml(p.Remarques)}</p>
+              </div>
+            </div>
+            <div class="actions">
+              <button id="closePatientBtn" class="btn">Fermer</button>
+              <button id="exportPatientPdf" class="btn primary">Exporter PDF</button>
+            </div>
+          </div>
+        </div>
+      `;
+      root.querySelector('#closePatientBtn').onclick = closeModal;
+      root.querySelector('#exportPatientPdf').onclick = () => {
+        const { jsPDF } = window.jspdf;
+        const doc = new jsPDF();
+        let y=10;
+        const addLine=(k,v)=>{ doc.text(`${k}: ${v||''}`, 10, y); y+=8; };
+        addLine('Nom', p.Nom); addLine('Prénom', p.Prenom); addLine('CIN', p.CIN); addLine('DateNaissance', p.DateNaissance || '');
+        addLine('Tel', p.Tel); addLine('Email', p.Email); addLine('Adresse', p.Adresse); addLine('Ville', p.Ville);
+        addLine('Allergies', p.Allergies); addLine('Remarques', p.Remarques);
+        doc.save(`${p.CIN || (p.Nom||'patient')}.pdf`);
+      };
+    }
+
+    function openPatientModal(data = null){
+      const isEdit = !!data;
+      const patient = data || { Nom:'', Prenom:'', CIN:'', DateNaissance:'', Tel:'', Email:'', Adresse:'', Ville:'', Allergies:'', Remarques:'' };
+      const root = $('modalRoot'); root.style.display='block';
+      root.innerHTML = `
+        <div class="modal-backdrop">
+          <div class="modal">
+            <h3>${isEdit ? 'Modifier Patient' : 'Ajouter Patient'}</h3>
+            <div class="form-row">
+              <div class="form-col"><label>Nom</label><input id="p_Nom" type="text" value="${escapeHtml(patient.Nom||'')}" /></div>
+              <div class="form-col"><label>Prénom</label><input id="p_Prenom" type="text" value="${escapeHtml(patient.Prenom||'')}" /></div>
+            </div>
+            <div class="form-row">
+              <div class="form-col"><label>CIN</label><input id="p_CIN" type="text" value="${escapeHtml(patient.CIN||'')}" /></div>
+              <div class="form-col"><label>Date Naissance</label><input id="p_DateNaissance" type="date" value="${escapeHtml(patient.DateNaissance||'')}" /></div>
+            </div>
+            <div class="form-row">
+              <div class="form-col"><label>Téléphone</label><input id="p_Tel" type="text" value="${escapeHtml(patient.Tel||'')}" /></div>
+              <div class="form-col"><label>Email</label><input id="p_Email" type="email" value="${escapeHtml(patient.Email||'')}" /></div>
+            </div>
+            <div class="form-row">
+              <div class="form-col"><label>Adresse</label><input id="p_Adresse" type="text" value="${escapeHtml(patient.Adresse||'')}" /></div>
+              <div class="form-col"><label>Ville</label><input id="p_Ville" type="text" value="${escapeHtml(patient.Ville||'')}" /></div>
+            </div>
+            <div class="form-row"><div class="form-col"><label>Allergies</label><textarea id="p_Allergies">${escapeHtml(patient.Allergies||'')}</textarea></div></div>
+            <div class="form-row"><div class="form-col"><label>Remarques</label><textarea id="p_Remarques">${escapeHtml(patient.Remarques||'')}</textarea></div></div>
+            <div class="actions">
+              <button id="cancelPatient" class="btn">Annuler</button>
+              <button id="savePatient" class="btn primary">${isEdit ? 'Sauvegarder' : 'Ajouter'}</button>
+            </div>
+          </div>
+        </div>
+      `;
+      root.querySelector('#cancelPatient').onclick = closeModal;
+      root.querySelector('#savePatient').onclick = async () => {
+        const payload = {
+          IDP: patient.IDP || undefined,
+          Nom: document.getElementById('p_Nom').value.trim(),
+          Prenom: document.getElementById('p_Prenom').value.trim(),
+          CIN: document.getElementById('p_CIN').value.trim(),
+          DateNaissance: document.getElementById('p_DateNaissance').value,
+          Tel: document.getElementById('p_Tel').value.trim(),
+          Email: document.getElementById('p_Email').value.trim(),
+          Adresse: document.getElementById('p_Adresse').value.trim(),
+          Ville: document.getElementById('p_Ville').value.trim(),
+          Allergies: document.getElementById('p_Allergies').value.trim(),
+          Remarques: document.getElementById('p_Remarques').value.trim()
+        };
+        try{
+          if(isEdit){
+            await window.electronAPI.updatePatient(payload);
+            alert('Patient modifié.');
+          }else{
+            await window.electronAPI.addPatient(payload);
+            alert('Patient ajouté.');
+          }
+          closeModal();
+          patientsCache = await window.electronAPI.getPatients();
+          renderPatientsTable();
+        }catch(e){ console.error(e); alert('Erreur sauvegarde patient'); }
+      };
+    }
+
+    window.openPatientEditModal = async function(idp){
+      const list = await window.electronAPI.getPatients();
+      const p = list.find(x=>x.IDP===idp);
+      openPatientModal(p);
+    };
+
+    /* ===================== CONSULTATIONS ===================== */
+    function renderConsultationsPage(){
+      $('pageTitle').textContent = 'Consultations';
+      $('pageSubtitle').textContent = 'Dossiers et consultations dentaires';
+      const area = $('contentArea');
+      area.innerHTML = `
+        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px">
+          <h3>Consultations</h3>
+          <div>
+            <button id="addConsultBtn" class="btn primary">+ Nouvelle Consultation</button>
+          </div>
+        </div>
+        <div style="overflow:auto">
+          <table class="table" id="consultTable">
+            <thead><tr><th>ID</th><th>Patient</th><th>Motif</th><th>Diagnostic</th><th>Médecin</th><th>Actions</th></tr></thead>
+            <tbody id="consultTbody"></tbody>
+          </table>
+        </div>
+      `;
+      renderConsultTable();
+      document.getElementById('addConsultBtn').addEventListener('click', ()=> openConsultModal());
+    }
+
+    function renderConsultTable(){
+      const tbody = $('consultTbody');
+      const list = consultationsCache || [];
+      if(!list.length){ tbody.innerHTML = `<tr><td colspan="6" class="small muted">Aucune consultation</td></tr>`; return; }
+      tbody.innerHTML = list.map(c => {
+        const p = patientsCache.find(x=>x.IDP===c.IDP) || {};
+        return `<tr>
+          <td>${c.IDC}</td>
+          <td>${escapeHtml(p.Nom||'') } ${escapeHtml(p.Prenom||'')}</td>
+          <td>${escapeHtml(c.Motif||'')}</td>
+          <td>${escapeHtml(c.Diagnostic||'')}</td>
+          <td>${escapeHtml(c.NomMedecin||'')}</td>
+          <td>
+            <button class="btn" onclick="openConsultDetails(${c.IDC})">Voir</button>
+            <button class="btn" onclick="openConsultEdit(${c.IDC})">Modifier</button>
+            <button class="btn danger" onclick="deleteConsultation(${c.IDC})">Supprimer</button>
+          </td>
+        </tr>`;
+      }).join('');
+    }
+
+    window.openConsultDetails = async function(IDC){
+      const consult = await window.electronAPI.getConsultationById(Number(IDC));
+      if(!consult) return alert('Consultation introuvable');
+      const p = patientsCache.find(x=>x.IDP===consult.IDP) || {};
+      const root = $('modalRoot'); root.style.display='block';
+      root.innerHTML = `
+        <div class="modal-backdrop">
+          <div class="modal">
+            <h3>Consultation #${consult.IDC}</h3>
+            <p><strong>Patient:</strong> ${escapeHtml(p.Nom||'')} ${escapeHtml(p.Prenom||'')}</p>
+            <p><strong>Motif:</strong> ${escapeHtml(consult.Motif)}</p>
+            <p><strong>Diagnostic:</strong> ${escapeHtml(consult.Diagnostic)}</p>
+            <p><strong>Observations:</strong> ${escapeHtml(consult.Observations)}</p>
+            <p><strong>Remarques:</strong> ${escapeHtml(consult.Remarques)}</p>
+            <div style="margin-top:8px">
+              <strong>Pièces jointes:</strong>
+              <div class="file-preview">
+                ${consult['PiècesJointes_FileName'] ? `<div class="file-item">${escapeHtml(consult['PiècesJointes_FileName'])}</div>` : '<div class="small muted">Aucun fichier</div>'}
+              </div>
+            </div>
+            <div class="actions">
+              <button id="closeConsult" class="btn">Fermer</button>
+              <button id="printConsult" class="btn primary">Imprimer / Export</button>
+            </div>
+          </div>
+        </div>
+      `;
+      root.querySelector('#closeConsult').onclick = closeModal;
+      root.querySelector('#printConsult').onclick = () => {
+        const { jsPDF } = window.jspdf;
+        const doc = new jsPDF();
+        let y=10;
+        const addLine=(k,v)=>{doc.text(`${k}: ${v||''}`, 10, y); y+=8;};
+        addLine('Consultation #', consult.IDC);
+        addLine('Patient', p.Nom + ' ' + p.Prenom);
+        addLine('Motif', consult.Motif); addLine('Diagnostic', consult.Diagnostic);
+        addLine('Observations', consult.Observations); addLine('Remarques', consult.Remarques);
+        doc.save(`consultation_${consult.IDC}.pdf`);
+      };
+    };
+
+    function openConsultModal(data=null){
+      const isEdit = !!data;
+      const consult = data || { IDC:null, IDP:null, CIN:'', Motif:'', Diagnostic:'', Observations:'', Remarques:'', NomMedecin:'', PiècesJointes_FileName:'' };
+      const root = $('modalRoot'); root.style.display='block';
+      root.innerHTML = `
+        <div class="modal-backdrop">
+          <div class="modal">
+            <h3>${isEdit? 'Modifier Consultation' : 'Nouvelle Consultation'}</h3>
+            <div class="form-row">
+              <div class="form-col"><label>Patient (ID)</label><input id="c_IDP" type="text" value="${escapeHtml(consult.IDP||'')}" /></div>
+              <div class="form-col"><label>CIN</label><input id="c_CIN" type="text" value="${escapeHtml(consult.CIN||'')}" /></div>
+            </div>
+            <div class="form-row">
+              <div class="form-col"><label>Motif</label><input id="c_Motif" type="text" value="${escapeHtml(consult.Motif||'')}" /></div>
+              <div class="form-col"><label>Diagnostic</label><input id="c_Diagnostic" type="text" value="${escapeHtml(consult.Diagnostic||'')}" /></div>
+            </div>
+            <div class="form-row">
+              <div class="form-col"><label>Observations</label><textarea id="c_Observations">${escapeHtml(consult.Observations||'')}</textarea></div>
+            </div>
+            <div class="form-row">
+              <div class="form-col"><label>Nom Médecin</label><input id="c_NomMed" type="text" value="${escapeHtml(consult.NomMedecin||'')}" /></div>
+              <div class="form-col"><label>Pièce jointe</label><input id="c_File" type="file" /></div>
+            </div>
+            <div class="actions">
+              ${isEdit? '<button id="delConsultBtn" class="btn danger">Supprimer</button>':''}
+              <button id="cancelConsult" class="btn">Annuler</button>
+              <button id="saveConsult" class="btn primary">${isEdit? 'Sauvegarder' : 'Enregistrer'}</button>
+            </div>
+          </div>
+        </div>
+      `;
+      root.querySelector('#cancelConsult').onclick = closeModal;
+      root.querySelector('#saveConsult').onclick = async () => {
+        const payload = {
+          IDC: consult.IDC || undefined,
+          IDP: parseInt(document.getElementById('c_IDP').value) || null,
+          CIN: document.getElementById('c_CIN').value.trim(),
+          Motif: document.getElementById('c_Motif').value.trim(),
+          Diagnostic: document.getElementById('c_Diagnostic').value.trim(),
+          Observations: document.getElementById('c_Observations').value.trim(),
+          Remarques: consult.Remarques || '',
+          NomMedecin: document.getElementById('c_NomMed').value.trim()
+        };
+
+        // handle file -> read as base64
+        const finput = document.getElementById('c_File');
+        if(finput && finput.files && finput.files[0]){
+          const file = finput.files[0];
+          const reader = new FileReader();
+          reader.onload = async () => {
+            const base64 = reader.result.split(',')[1];
+            payload['PiècesJointes_FileData'] = base64;
+            payload['PiècesJointes_FileName'] = file.name;
+            payload['PiècesJointes_FileType'] = file.type;
+            await saveConsultation(payload, isEdit);
+          };
+          reader.readAsDataURL(file);
+        }else{
+          await saveConsultation(payload, isEdit);
+        }
+      };
+
+      if(isEdit){
+        root.querySelector('#delConsultBtn').onclick = async () => {
+          if(!confirm('Supprimer cette consultation ?')) return;
+          try{ await window.electronAPI.deleteConsultation(Number(consult.IDC)); alert('Supprimé'); closeModal(); consultationsCache = await window.electronAPI.getConsultations(); renderConsultTable(); }
+          catch(e){ console.error(e); alert('Erreur suppression') }
+        };
+      }
+    }
+
+    async function saveConsultation(payload, isEdit){
+      try{
+        if(isEdit) await window.electronAPI.updateConsultation(payload);
+        else await window.electronAPI.addConsultation(payload);
+        alert(isEdit? 'Consultation modifiée.' : 'Consultation ajoutée.');
+        closeModal();
+        consultationsCache = await window.electronAPI.getConsultations();
+        renderConsultTable();
+      }catch(e){ console.error(e); alert('Erreur enregistrement consultation'); }
+    }
+
+    window.openConsultEdit = async function(IDC){
+      const consult = await window.electronAPI.getConsultationById(Number(IDC));
+      if(!consult) return alert('Introuvable');
+      openConsultModal(consult);
+    };
+
+    async function deleteConsultation(IDC){
+      if(!confirm('Supprimer la consultation ?')) return;
+      try{ await window.electronAPI.deleteConsultation(Number(IDC)); consultationsCache = await window.electronAPI.getConsultations(); renderConsultTable(); alert('Supprimé'); }
+      catch(e){ console.error(e); alert('Erreur suppression'); }
+    }
+
+    /* ===================== ORDONNANCES ===================== */
+    function renderOrdonnancesPage(){
+      $('pageTitle').textContent = 'Ordonnances';
+      $('pageSubtitle').textContent = 'Gestion des ordonnances';
+      const area = $('contentArea');
+      area.innerHTML = `
+        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px">
+          <h3>Ordonnances</h3>
+          <div><button id="addOrdoBtn" class="btn primary">+ Nouvelle Ordonnance</button></div>
+        </div>
+        <div style="overflow:auto">
+          <table class="table" id="ordonnTable">
+            <thead><tr><th>ID</th><th>Consultation</th><th>Patient</th><th>Medicaments</th><th>Actions</th></tr></thead>
+            <tbody id="ordonnTbody"></tbody>
+          </table>
+        </div>
+      `;
+      renderOrdonnancesTable();
+      document.getElementById('addOrdoBtn').addEventListener('click', ()=> openOrdonnanceModal());
+    }
+
+    function renderOrdonnancesTable(){
+      const tbody = $('ordonnTbody');
+      const list = ordonnancesCache || [];
+      if(!list.length){ tbody.innerHTML = `<tr><td colspan="5" class="small muted">Aucune ordonnance</td></tr>`; return; }
+      tbody.innerHTML = list.map(o => {
+        const c = consultationsCache.find(x=>x.IDC===o.IDC) || {};
+        const p = patientsCache.find(x=>x.IDP===o.IDP) || {};
+        const meds = [o.Medicament1,o.Medicament2,o.Medicament3].filter(Boolean).join(', ');
+        return `<tr>
+          <td>${o.IDR}</td>
+          <td>${escapeHtml(c.Motif||'')} (${o.IDC||''})</td>
+          <td>${escapeHtml(p.Nom||'')} ${escapeHtml(p.Prenom||'')}</td>
+          <td>${escapeHtml(meds)}</td>
+          <td>
+            <button class="btn" onclick="openOrdonnanceDetails(${o.IDR})">Voir</button>
+            <button class="btn" onclick="openOrdonnanceEdit(${o.IDR})">Modifier</button>
+            <button class="btn danger" onclick="deleteOrdonnance(${o.IDR})">Supprimer</button>
+          </td>
+        </tr>`;
+      }).join('');
+    }
+
+    function openOrdonnanceModal(data=null){
+      const isEdit = !!data;
+      const o = data || { IDR:null, IDC:null, IDP:null, Medicament1:'',Posologie1:'',Duree1:'',Medicament2:'',Posologie2:'',Duree2:'',Medicament3:'',Posologie3:'',Duree3:'',Remarques:'' };
+      const root = $('modalRoot'); root.style.display='block';
+      root.innerHTML = `
+        <div class="modal-backdrop">
+          <div class="modal">
+            <h3>${isEdit? 'Modifier Ordonnance' : 'Nouvelle Ordonnance'}</h3>
+            <div class="form-row"><div class="form-col"><label>Consultation (IDC)</label><input id="o_IDC" type="text" value="${escapeHtml(o.IDC||'')}" /></div><div class="form-col"><label>Patient (IDP)</label><input id="o_IDP" type="text" value="${escapeHtml(o.IDP||'')}" /></div></div>
+            <div style="margin-top:8px"><strong>Médicament 1</strong></div>
+            <div class="form-row"><div class="form-col"><input id="o_Med1" type="text" placeholder="Médicament" value="${escapeHtml(o.Medicament1||'')}" /></div><div class="form-col"><input id="o_Pos1" type="text" placeholder="Posologie" value="${escapeHtml(o.Posologie1||'')}" /></div><div class="form-col"><input id="o_Dur1" type="text" placeholder="Durée" value="${escapeHtml(o.Duree1||'')}" /></div></div>
+
+            <div style="margin-top:8px"><strong>Médicament 2</strong></div>
+            <div class="form-row"><div class="form-col"><input id="o_Med2" type="text" value="${escapeHtml(o.Medicament2||'')}" /></div><div class="form-col"><input id="o_Pos2" type="text" value="${escapeHtml(o.Posologie2||'')}" /></div><div class="form-col"><input id="o_Dur2" type="text" value="${escapeHtml(o.Duree2||'')}" /></div></div>
+
+            <div style="margin-top:8px"><strong>Médicament 3</strong></div>
+            <div class="form-row"><div class="form-col"><input id="o_Med3" type="text" value="${escapeHtml(o.Medicament3||'')}" /></div><div class="form-col"><input id="o_Pos3" type="text" value="${escapeHtml(o.Posologie3||'')}" /></div><div class="form-col"><input id="o_Dur3" type="text" value="${escapeHtml(o.Duree3||'')}" /></div></div>
+
+            <div class="form-row"><div class="form-col"><label>Remarques</label><textarea id="o_Rem">${escapeHtml(o.Remarques||'')}</textarea></div></div>
+
+            <div class="actions">
+              ${isEdit? '<button id="delOrdoBtn" class="btn danger">Supprimer</button>':''}
+              <button id="cancelOrdo" class="btn">Annuler</button>
+              <button id="saveOrdo" class="btn primary">${isEdit? 'Sauvegarder' : 'Enregistrer'}</button>
+            </div>
+          </div>
+        </div>
+      `;
+      root.querySelector('#cancelOrdo').onclick = closeModal;
+      root.querySelector('#saveOrdo').onclick = async () => {
+        const payload = {
+          IDR: o.IDR || undefined,
+          IDC: parseInt(document.getElementById('o_IDC').value) || null,
+          IDP: parseInt(document.getElementById('o_IDP').value) || null,
+          Medicament1: document.getElementById('o_Med1').value.trim(),
+          Posologie1: document.getElementById('o_Pos1').value.trim(),
+          Duree1: document.getElementById('o_Dur1').value.trim(),
+          Medicament2: document.getElementById('o_Med2').value.trim(),
+          Posologie2: document.getElementById('o_Pos2').value.trim(),
+          Duree2: document.getElementById('o_Dur2').value.trim(),
+          Medicament3: document.getElementById('o_Med3').value.trim(),
+          Posologie3: document.getElementById('o_Pos3').value.trim(),
+          Duree3: document.getElementById('o_Dur3').value.trim(),
+          Remarques: document.getElementById('o_Rem').value.trim()
+        };
+        try{
+          if(isEdit) await window.electronAPI.updateOrdonnance(payload);
+          else await window.electronAPI.addOrdonnance(payload);
+          alert('Ordonnance sauvegardée.');
+          closeModal();
+          ordonnancesCache = await window.electronAPI.getOrdonnances();
+          renderOrdonnancesTable();
+        }catch(e){ console.error(e); alert('Erreur ordonnance'); }
+      };
+      if(isEdit){
+        root.querySelector('#delOrdoBtn').onclick = async () => {
+          if(!confirm('Supprimer ordonnance ?')) return;
+          await window.electronAPI.deleteOrdonnance(Number(o.IDR));
+          ordonnancesCache = await window.electronAPI.getOrdonnances();
+          renderOrdonnancesTable();
+          closeModal();
+        };
+      }
+    }
+
+    window.openOrdonnanceDetails = async function(IDR){
+      const o = (await window.electronAPI.getOrdonnanceById(Number(IDR))) || null;
+      if(!o) return alert('Introuvable');
+      const p = patientsCache.find(x=>x.IDP===o.IDP) || {};
+      const root = $('modalRoot'); root.style.display='block';
+      root.innerHTML = `
+        <div class="modal-backdrop">
+          <div class="modal">
+            <h3>Ordonnance #${o.IDR}</h3>
+            <p><strong>Patient:</strong> ${escapeHtml(p.Nom||'')} ${escapeHtml(p.Prenom||'')}</p>
+            <p><strong>Médicaments:</strong></p>
+            <ul>
+              ${o.Medicament1?`<li>${escapeHtml(o.Medicament1)} — ${escapeHtml(o.Posologie1)} — ${escapeHtml(o.Duree1)}</li>`:''}
+              ${o.Medicament2?`<li>${escapeHtml(o.Medicament2)} — ${escapeHtml(o.Posologie2)} — ${escapeHtml(o.Duree2)}</li>`:''}
+              ${o.Medicament3?`<li>${escapeHtml(o.Medicament3)} — ${escapeHtml(o.Posologie3)} — ${escapeHtml(o.Duree3)}</li>`:''}
+            </ul>
+            <p><strong>Remarques:</strong> ${escapeHtml(o.Remarques)}</p>
+            <div class="actions">
+              <button id="closeOrdo" class="btn">Fermer</button>
+              <button id="exportOrdoPdf" class="btn primary">Exporter PDF</button>
+            </div>
+          </div>
+        </div>
+      `;
+      root.querySelector('#closeOrdo').onclick = closeModal;
+      root.querySelector('#exportOrdoPdf').onclick = () => {
+        const { jsPDF } = window.jspdf;
+        const doc = new jsPDF();
+        let y=10;
+        doc.text(`Ordonnance #${o.IDR}`, 10, y); y+=10;
+        doc.text(`Patient: ${p.Nom||''} ${p.Prenom||''}`, 10, y); y+=8;
+        if(o.Medicament1) { doc.text(`${o.Medicament1} - ${o.Posologie1} - ${o.Duree1}`, 10, y); y+=8; }
+        if(o.Medicament2) { doc.text(`${o.Medicament2} - ${o.Posologie2} - ${o.Duree2}`, 10, y); y+=8; }
+        if(o.Medicament3) { doc.text(`${o.Medicament3} - ${o.Posologie3} - ${o.Duree3}`, 10, y); y+=8; }
+        doc.save(`ordonnance_${o.IDR}.pdf`);
+      };
+    };
+
+    window.openOrdonnanceEdit = async function(IDR){
+      const o = await window.electronAPI.getOrdonnanceById(Number(IDR));
+      openOrdonnanceModal(o);
+    };
+
+    async function deleteOrdonnance(IDR){
+      if(!confirm('Supprimer ordonnance ?')) return;
+      try{ await window.electronAPI.deleteOrdonnance(Number(IDR)); ordonnancesCache = await window.electronAPI.getOrdonnances(); renderOrdonnancesTable(); alert('Supprimé'); }
+      catch(e){ console.error(e); alert('Erreur suppression'); }
+    }
+
+    /* ===================== SUIVI DOCUMENTS ===================== */
+    function renderSuiviPage(){
+      $('pageTitle').textContent = 'Suivi Documents';
+      $('pageSubtitle').textContent = 'Gestion des documents et justificatifs';
+      const area = $('contentArea');
+      area.innerHTML = `
+        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px">
+          <h3>Suivi Documents</h3>
+          <div><button id="addDocBtn" class="btn primary">+ Ajouter Document</button></div>
+        </div>
+        <div style="overflow:auto">
+          <table class="table" id="suiviTable">
+            <thead><tr><th>Ref</th><th>Fournisseur</th><th>Date</th><th>Montant</th><th>Actions</th></tr></thead>
+            <tbody id="suiviTbody"></tbody>
+          </table>
+        </div>
+      `;
+      renderSuiviTable();
+      document.getElementById('addDocBtn').addEventListener('click', ()=> openSuiviModal());
+    }
+
+    function renderSuiviTable(){
+      const tbody = $('suiviTbody');
+      const list = suiviCache || [];
+      if(!list.length){ tbody.innerHTML = `<tr><td colspan="5" class="small muted">Aucun document</td></tr>`; return; }
+      tbody.innerHTML = list.map(s => `
+        <tr>
+          <td>${escapeHtml(s.RefDocument||'')}</td>
+          <td>${escapeHtml(s.Fournisseur||'')}</td>
+          <td>${escapeHtml(s.Date_STEXT||'')}</td>
+          <td>${s.Montant!=null ? s.Montant : ''}</td>
+          <td>
+            <button class="btn" onclick="openSuiviDetails(${s.IDSuivi})">Voir</button>
+            <button class="btn" onclick="openSuiviEdit(${s.IDSuivi})">Modifier</button>
+            <button class="btn danger" onclick="deleteSuivi(${s.IDSuivi})">Supprimer</button>
+          </td>
+        </tr>
+      `).join('');
+    }
+
+    function openSuiviModal(data=null){
+      const isEdit = !!data;
+      const s = data || { IDSuivi:null, RefDocument:'', Fournisseur:'', Date_STEXT:'', Date_R:'', Mode_R:'', Montant:'', Saisie:'', Compatibilite:'', Observation:''};
+      const root = $('modalRoot'); root.style.display='block';
+      root.innerHTML = `
+        <div class="modal-backdrop"><div class="modal">
+          <h3>${isEdit? 'Modifier Document' : 'Ajouter Document'}</h3>
+          <div class="form-row"><div class="form-col"><label>Réf</label><input id="s_Ref" type="text" value="${escapeHtml(s.RefDocument||'')}" /></div><div class="form-col"><label>Fournisseur</label><input id="s_Four" type="text" value="${escapeHtml(s.Fournisseur||'')}" /></div></div>
+          <div class="form-row"><div class="form-col"><label>Date (Saisie)</label><input id="s_DateS" type="date" value="${escapeHtml(s.Date_STEXT||'')}" /></div><div class="form-col"><label>Date R</label><input id="s_DateR" type="date" value="${escapeHtml(s.Date_R||'')}" /></div></div>
+          <div class="form-row"><div class="form-col"><label>Mode R</label><input id="s_Mode" type="text" value="${escapeHtml(s.Mode_R||'')}" /></div><div class="form-col"><label>Montant</label><input id="s_Mont" type="text" value="${escapeHtml(s.Montant||'')}" /></div></div>
+          <div class="form-row"><div class="form-col"><label>Justificatif (image)</label><input id="s_File1" type="file" accept="image/*" /></div><div class="form-col"><label>Document (image/pdf)</label><input id="s_File2" type="file" /></div></div>
+          <div class="form-row"><div class="form-col"><label>Observation</label><textarea id="s_Obs">${escapeHtml(s.Observation||'')}</textarea></div></div>
+
+          <div class="actions">
+            ${isEdit? '<button id="delSuiviBtn" class="btn danger">Supprimer</button>':''}
+            <button id="cancelSuivi" class="btn">Annuler</button>
+            <button id="saveSuivi" class="btn primary">${isEdit? 'Sauvegarder' : 'Enregistrer'}</button>
+          </div>
+        </div></div>
+      `;
+
+      root.querySelector('#cancelSuivi').onclick = closeModal;
+      root.querySelector('#saveSuivi').onclick = async () => {
+        const payload = {
+          IDSuivi: s.IDSuivi || undefined,
+          RefDocument: document.getElementById('s_Ref').value.trim(),
+          Fournisseur: document.getElementById('s_Four').value.trim(),
+          Date_STEXT: document.getElementById('s_DateS').value,
+          Date_R: document.getElementById('s_DateR').value,
+          Mode_R: document.getElementById('s_Mode').value.trim(),
+          Montant: parseFloat(document.getElementById('s_Mont').value) || 0,
+          Observation: document.getElementById('s_Obs').value.trim()
+        };
+
+        // read files if any
+        const f1 = document.getElementById('s_File1');
+        const f2 = document.getElementById('s_File2');
+        try{
+          if(f1 && f1.files[0]){
+            const base = await fileToBase64(f1.files[0]);
+            payload.ImageJustificatif_FileData = base.data;
+            payload.ImageJustificatif_FileName = base.name;
+            payload.ImageJustificatif_FileType = base.type;
+          }
+          if(f2 && f2.files[0]){
+            const base2 = await fileToBase64(f2.files[0]);
+            payload.ImageDoc_FileData = base2.data;
+            payload.ImageDoc_FileName3 = base2.name;
+            payload.ImageDoc_FileType = base2.type;
+          }
+
+          if(isEdit) await window.electronAPI.updateSuiviDoc(payload);
+          else await window.electronAPI.addSuiviDoc(payload);
+          alert('Document enregistré.');
+          closeModal();
+          suiviCache = await window.electronAPI.getSuiviDocs();
+          renderSuiviTable();
+        }catch(e){ console.error(e); alert('Erreur sauvegarde document'); }
+      };
+
+      if(isEdit){
+        root.querySelector('#delSuiviBtn').onclick = async () => {
+          if(!confirm('Supprimer document ?')) return;
+          await window.electronAPI.deleteSuiviDoc(Number(s.IDSuivi));
+          suiviCache = await window.electronAPI.getSuiviDocs();
+          renderSuiviTable();
+          closeModal();
+        };
+      }
+    }
+
+    async function openSuiviDetails(IDSuivi){
+      const list = await window.electronAPI.getSuiviDocs();
+      const s = list.find(x=>x.IDSuivi===IDSuivi);
+      if(!s) return alert('Introuvable');
+      const root = $('modalRoot'); root.style.display='block';
+      root.innerHTML = `
+        <div class="modal-backdrop"><div class="modal">
+          <h3>Document ${escapeHtml(s.RefDocument||'')}</h3>
+          <p><strong>Fournisseur:</strong> ${escapeHtml(s.Fournisseur||'')}</p>
+          <p><strong>Date:</strong> ${escapeHtml(s.Date_STEXT||'')}</p>
+          <p><strong>Montant:</strong> ${s.Montant || ''}</p>
+          <p><strong>Observation:</strong> ${escapeHtml(s.Observation||'')}</p>
+          <div style="margin-top:10px">
+            <strong>Fichiers:</strong>
+            <div class="file-preview">
+              ${s.ImageJustificatif_FileName ? `<div class="file-item">${escapeHtml(s.ImageJustificatif_FileName)}</div>` : ''}
+              ${s.ImageDoc_FileName3 ? `<div class="file-item">${escapeHtml(s.ImageDoc_FileName3)}</div>` : ''}
+            </div>
+          </div>
+          <div class="actions">
+            <button id="closeSuivi" class="btn">Fermer</button>
+          </div>
+        </div></div>
+      `;
+      root.querySelector('#closeSuivi').onclick = closeModal;
+    }
+
+    window.openSuiviEdit = async function(IDSuivi){
+      const s = (await window.electronAPI.getSuiviDocs()).find(x=>x.IDSuivi===IDSuivi);
+      openSuiviModal(s);
+    }
+
+    async function deleteSuivi(IDSuivi){
+      if(!confirm('Supprimer document ?')) return;
+      try{ await window.electronAPI.deleteSuiviDoc(Number(IDSuivi)); suiviCache = await window.electronAPI.getSuiviDocs(); renderSuiviTable(); alert('Supprimé'); }
+      catch(e){ console.error(e); alert('Erreur suppression'); }
+    }
+
+    /* ===================== SETTINGS ===================== */
+    function renderSettings(){
+      $('pageTitle').textContent = 'Paramètres';
+      $('pageSubtitle').textContent = 'Réglages de l\'application';
+      const area = $('contentArea');
+      area.innerHTML = `
+        <h3>Paramètres</h3>
+        <p class="small muted">Ici tu peux ajouter configurations spécifiques (ex: impr. par défaut, profil cabinet,...)</p>
+        <div style="margin-top:10px">
+          <button id="btnSync" class="btn">Synchroniser caches</button>
+        </div>
+      `;
+      $('btnSync').addEventListener('click', async ()=>{
+        await loadAllCaches();
+        alert('Synchronisation terminée');
+      });
+    }
+
+    /* ===================== UTIL ===================== */
+    async function searchPatient(){
+      const q = ( $('searchInput').value || '' ).trim().toLowerCase();
+      if(!q) return alert('Saisis nom ou CIN');
+      const list = await window.electronAPI.getPatients();
+      const found = list.find(p => ((p.Nom||'').toLowerCase()===q) || ((p.Prenom||'') + ' ' + (p.Nom||'')).toLowerCase()===q || ((p.CIN||'').toLowerCase()===q));
+      const resDiv = $('searchResult');
+      if(!found){ resDiv.innerHTML = `<div class="small muted">Aucun patient</div>`; return; }
+      resDiv.innerHTML = `
+        <div class="patient-card">
+          <div style="display:flex;justify-content:space-between;align-items:center">
+            <div><strong>${escapeHtml(found.Nom||'')} ${escapeHtml(found.Prenom||'')}</strong><div class="small muted">${escapeHtml(found.CIN||'')}</div></div>
+            <div><button class="btn" onclick="openPatientDetailsModalById(${found.IDP})">Voir</button></div>
+          </div>
+          <div class="small" style="margin-top:8px">${escapeHtml(found.Tel||'')}</div>
+        </div>
+      `;
+    }
+
+    function fileToBase64(file){
+      return new Promise((resolve,reject)=>{
+        const reader = new FileReader();
+        reader.onload = ()=>{
+          const arr = reader.result.split(',');
+          resolve({ data: arr[1], name: file.name, type: file.type });
+        };
+        reader.onerror = reject;
+        reader.readAsDataURL(file);
+      });
+    }
+
+    // expose some for inline onclick usage
+    window.openPatientDetailsModal = openPatientDetailsModal;
+    window.openPatientEditModal = openPatientEditModal;
+    window.openConsultEdit = openConsultEdit;
+
   </script>
 </body>
 </html>
