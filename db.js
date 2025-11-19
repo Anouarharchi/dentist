@@ -128,29 +128,36 @@ db.serialize(() => {
 
 
 
-
 function updatePatientInDB(p) {
-  return run(`
-    UPDATE Patients SET 
-      Nom=?,
-      Prenom=?,
-      CIN=?,
-      DateNaissance=?,
-      Tel=?,
-      Email=?,
-      Adresse=?,
-      Ville=?,
-      Allergies=?,
-      Remarques=?
-    WHERE IDP=?
-  `, [
-    p.Nom, p.Prenom, p.CIN,
-    p.DateNaissance, p.Tel, p.Email,
-    p.Adresse, p.Ville,
-    p.Allergies, p.Remarques,
-    p.IDP
-  ]);
+  return new Promise((resolve, reject) => {
+    const sql = `
+      UPDATE Patients SET 
+        Nom=?,
+        Prenom=?,
+        CIN=?,
+        DateNaissance=?,
+        Tel=?,
+        Email=?,
+        Adresse=?,
+        Ville=?,
+        Allergies=?,
+        Remarques=?
+      WHERE IDP=?
+    `;
+    const params = [
+      p.Nom, p.Prenom, p.CIN,
+      p.DateNaissance, p.Tel, p.Email,
+      p.Adresse, p.Ville,
+      p.Allergies, p.Remarques,
+      p.IDP
+    ];
+    db.run(sql, params, function(err) {
+      if (err) reject(err);
+      else resolve(true);
+    });
+  });
 }
+
 
 
 function getAllHonoraires() {

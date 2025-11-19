@@ -158,9 +158,15 @@ ipcMain.handle('save-photo', async (event, { file, CIN }) => {
 // ---------------------------
 // Patients & Appointments
 // ---------------------------
-ipcMain.handle("update-patient", async (_, data) => {
-    return await updatePatientInDB(data);
+ipcMain.handle('update-patient', async (event, patient) => {
+  try {
+    return await db.updatePatientInDB(patient);
+  } catch (err) {
+    console.error('Failed to update patient:', err);
+    throw err;
+  }
 });
+
 
 // Get appointments for a specific date
 

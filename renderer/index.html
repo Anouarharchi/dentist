@@ -4,12 +4,8 @@
   <meta charset="UTF-8">
   <link rel="stylesheet" href="style.css">
 
-  <!-- ====== MENU.HTML CSS (unchanged) ====== -->
   <style>
-    body {
-      margin: 0;
-      font-family: Arial, sans-serif;
-    }
+    body { margin: 0; font-family: Arial, sans-serif; }
 
     .sidebar {
       width: 220px;
@@ -52,10 +48,8 @@
     }
   </style>
 </head>
-
 <body>
 
-  <!-- ========== MERGED SIDEBAR (menu.html) ========== -->
   <div class="sidebar" id="sidebar-container">
     <div class="logo">Clinic Admin</div>
     <ul class="menu">
@@ -68,48 +62,59 @@
     </ul>
   </div>
 
-  <!-- Main content -->
   <div class="main" id="main-content"></div>
 
-  <!-- ========== MERGED SCRIPTS ========== -->
   <script>
-    // ========== MENU.HTML JS (unchanged) ==========
     const menuItems = document.querySelectorAll('.menu li');
 
     menuItems.forEach(item => {
       item.addEventListener('click', () => {
-
-        // Remove active from all
         menuItems.forEach(i => i.classList.remove('active'));
-
-        // Add active to clicked item
         item.classList.add('active');
-
-        // Load page content (from index.js)
-        const page = item.dataset.page;
-        loadPage(page);
+        loadPage(item.dataset.page);
       });
     });
 
-    // ========== INDEX.JS CODE (unchanged) ==========
+    async function loadPage(page) {
+      try {
+        const res = await fetch(page);
+        if (!res.ok) throw new Error(`Impossible de charger ${page}`);
+        const html = await res.text();
+        document.getElementById('main-content').innerHTML = html;
 
-    // 🧭 Load content by page
-    function loadPage(page) {
-      fetch(page)
-        .then(res => res.text())
-        .then(html => {
-          document.getElementById('main-content').innerHTML = html;
+        // Run page-specific JS
+        switch(page) {
+          case 'dashboard.html':
+            import('./dashboard.js').then(m => m.initDashboard());
+            break;
 
-          // Initialize JS logic per page
-          switch(page) {
-            case 'dashboard.html':
-              import('./dashboard.js').then(module => module.initDashboard());
-              break;
-          }
-        });
+          case 'patients.html':
+            import('./patients.js').then(m => m.initPatients());
+            break;
+
+          case 'dentists.html':
+            import('./dentists.js').then(m => m.initDentists());
+            break;
+
+          case 'appointments.html':
+            import('./appointments.js').then(m => m.initAppointments());
+            break;
+
+          case 'sessions.html':
+            import('./sessions.js').then(m => m.initSessions());
+            break;
+
+          case 'settings.html':
+            import('./settings.js').then(m => m.initSettings());
+            break;
+        }
+      } catch(err) {
+        console.error(err);
+        document.getElementById('main-content').innerHTML = `<div style="padding:20px;color:red">Erreur lors du chargement de la page : ${page}</div>`;
+      }
     }
 
-    // Default initial page load
+    // Load default page
     loadPage('dashboard.html');
   </script>
 

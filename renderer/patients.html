@@ -1,69 +1,1002 @@
 <!DOCTYPE html>
 <html lang="fr">
 <head>
-<meta charset="UTF-8">
-<title>Patients</title>
-<style>
-  h2 { margin-bottom:10px; }
-  input#searchInput { width:300px; padding:6px; margin-bottom:10px; }
-  table { width:100%; border-collapse: collapse; background:#fff; }
-  th, td { border:1px solid #ccc; padding:8px; text-align:left; }
-  th { background:#1e90ff; color:#fff; }
-</style>
-</head>
-<body>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Patient Management System</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        :root {
+            --primary: #1e90ff;
+            --primary-dark: #0066cc;
+            --primary-light: #e6f2ff;
+            --success: #28a745;
+            --success-dark: #1e7e34;
+            --danger: #dc3545;
+            --danger-dark: #c82333;
+            --warning: #ffc107;
+            --warning-dark: #e0a800;
+            --light: #f8f9fa;
+            --dark: #343a40;
+            --gray: #6c757d;
+            --gray-light: #e9ecef;
+            --border-radius: 10px;
+            --border-radius-sm: 6px;
+            --box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
+            --box-shadow-lg: 0 8px 24px rgba(0, 0, 0, 0.12);
+            --transition: all 0.3s ease;
+            --gradient-primary: linear-gradient(135deg, #1e90ff 0%, #0066cc 100%);
+            --gradient-success: linear-gradient(135deg, #28a745 0%, #1e7e34 100%);
+        }
 
-<h2>Patients</h2>
-<input type="text" id="searchInput" placeholder="Rechercher un patient...">
-<table>
-  <thead>
-    <tr>
-      <th>Nom</th>
-      <th>Prénom</th>
-      <th>CIN</th>
-      <th>Téléphone</th>
-      <th>Ville</th>
-    </tr>
-  </thead>
-  <tbody id="patientsTbody"></tbody>
-</table>
+        .dark-theme {
+            --bg-primary: #121212;
+            --bg-secondary: #1e1e1e;
+            --bg-card: #252525;
+            --text-primary: #ffffff;
+            --text-secondary: #b0b0b0;
+            --border-color: #444;
+            --hover-color: #2a2a2a;
+        }
 
-<script>
-    function escapeHtml(s){ if(!s&&s!==0) return ''; return String(s).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c])); }
+        .light-theme {
+            --bg-primary: #ffffff;
+            --bg-secondary: #f5f7fa;
+            --bg-card: #ffffff;
+            --text-primary: #333333;
+            --text-secondary: #666666;
+            --border-color: #e1e5e9;
+            --hover-color: #f0f2f5;
+        }
 
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        }
 
-async function loadPatients(search="") {
-  if(!window.electronAPI) return;
-  let patients = await window.electronAPI.getPatients() || [];
-  if(search) {
-    const q = search.toLowerCase();
-    patients = patients.filter(p =>
-      (p.Nom || "").toLowerCase().includes(q) ||
-      (p.Prenom || "").toLowerCase().includes(q) ||
-      (p.CIN || "").toLowerCase().includes(q)
-    );
-  }
+        body {
+            background-color: var(--bg-secondary);
+            color: var(--text-primary);
+            transition: var(--transition);
+            line-height: 1.6;
+        }
 
-  const tbody = document.getElementById("patientsTbody");
-  tbody.innerHTML = patients.map(p => `
-    <tr>
-      <td>${escapeHtml(p.Nom)}</td>
-      <td>${escapeHtml(p.Prenom)}</td>
-      <td>${escapeHtml(p.CIN)}</td>
-      <td>${escapeHtml(p.Tel)}</td>
-      <td>${escapeHtml(p.Ville)}</td>
-    </tr>
-  `).join("");
+        .container {
+            max-width: 1400px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+
+        .header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            flex-wrap: wrap;
+            gap: 15px;
+            margin-bottom: 20px;
+            padding: 20px;
+            background: var(--bg-card);
+            border-radius: var(--border-radius);
+            box-shadow: var(--box-shadow);
+            position: relative;
+            overflow: hidden;
+        }
+
+        .header::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 4px;
+            background: var(--gradient-primary);
+        }
+
+        .header h1 {
+            font-size: 24px;
+            font-weight: 700;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .pill {
+            background: var(--gradient-primary);
+            color: white;
+            padding: 4px 12px;
+            border-radius: 20px;
+            font-size: 14px;
+            font-weight: 600;
+            box-shadow: 0 2px 4px rgba(30, 144, 255, 0.3);
+        }
+
+        .controls {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            flex-wrap: wrap;
+        }
+
+        .toolbar {
+            display: flex;
+            gap: 10px;
+            align-items: center;
+            flex-wrap: wrap;
+        }
+
+        .search-container {
+            position: relative;
+            display: flex;
+            align-items: center;
+        }
+
+        #searchBox {
+            padding: 12px 15px 12px 45px;
+            font-size: 14px;
+            border-radius: var(--border-radius);
+            border: 1px solid var(--border-color);
+            background: var(--bg-card);
+            color: var(--text-primary);
+            width: 350px;
+            transition: var(--transition);
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
+        }
+
+        #searchBox:focus {
+            outline: none;
+            border-color: var(--primary);
+            box-shadow: 0 0 0 3px rgba(30, 144, 255, 0.2);
+        }
+
+        .search-icon {
+            position: absolute;
+            left: 15px;
+            color: var(--text-secondary);
+            z-index: 1;
+        }
+
+        .btn {
+            padding: 10px 16px;
+            border-radius: var(--border-radius);
+            border: none;
+            font-size: 14px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: var(--transition);
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+        }
+
+        .btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.15);
+        }
+
+        .btn.primary {
+            background: var(--gradient-primary);
+            color: white;
+        }
+
+        .btn.primary:hover {
+            box-shadow: 0 4px 12px rgba(30, 144, 255, 0.3);
+        }
+
+        .btn.secondary {
+            background: var(--gray-light);
+            color: var(--dark);
+        }
+
+        .btn.secondary:hover {
+            background: #d4d4d4;
+        }
+
+        .btn.success {
+            background: var(--gradient-success);
+            color: white;
+        }
+
+        .btn.success:hover {
+            box-shadow: 0 4px 12px rgba(40, 167, 69, 0.3);
+        }
+
+        .btn.ghost {
+            background: transparent;
+            color: var(--primary);
+            border: 1px solid var(--primary);
+        }
+
+        .btn.ghost:hover {
+            background: rgba(30, 144, 255, 0.1);
+        }
+
+        .card {
+            background: var(--bg-card);
+            border-radius: var(--border-radius);
+            box-shadow: var(--box-shadow);
+            padding: 20px;
+            margin-bottom: 20px;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .card::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 4px;
+            background: var(--gradient-primary);
+            opacity: 0.7;
+        }
+
+        .topbar {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 15px;
+            padding-bottom: 10px;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .status-indicator {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .status-dot {
+            width: 8px;
+            height: 8px;
+            border-radius: 50%;
+            background: var(--success);
+        }
+
+        .status-dot.loading {
+            background: var(--warning);
+            animation: pulse 1.5s infinite;
+        }
+
+        @keyframes pulse {
+            0% { opacity: 1; }
+            50% { opacity: 0.5; }
+            100% { opacity: 1; }
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            font-size: 14px;
+        }
+
+        thead {
+            background: var(--bg-secondary);
+        }
+
+        th {
+            padding: 14px 15px;
+            text-align: left;
+            font-weight: 600;
+            color: var(--text-secondary);
+            border-bottom: 1px solid var(--border-color);
+            cursor: pointer;
+            user-select: none;
+            position: relative;
+            transition: var(--transition);
+        }
+
+        th:hover {
+            background: var(--hover-color);
+        }
+
+        th.sortable::after {
+            content: "↕";
+            margin-left: 5px;
+            opacity: 0.5;
+            font-size: 12px;
+        }
+
+        th.asc::after {
+            content: "↑";
+            opacity: 1;
+        }
+
+        th.desc::after {
+            content: "↓";
+            opacity: 1;
+        }
+
+        td {
+            padding: 14px 15px;
+            border-bottom: 1px solid var(--border-color);
+            transition: var(--transition);
+        }
+
+        tr {
+            transition: var(--transition);
+        }
+
+        tr:hover {
+            background: var(--hover-color);
+            transform: translateY(-1px);
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
+        }
+
+        .action-buttons {
+            display: flex;
+            gap: 8px;
+        }
+
+        .action-btn {
+            padding: 6px 10px;
+            border-radius: 4px;
+            border: none;
+            font-size: 12px;
+            cursor: pointer;
+            transition: var(--transition);
+            display: flex;
+            align-items: center;
+            gap: 4px;
+        }
+
+        .action-btn.edit {
+            background: rgba(30, 144, 255, 0.1);
+            color: var(--primary);
+        }
+
+        .action-btn.edit:hover {
+            background: var(--primary);
+            color: white;
+            transform: translateY(-1px);
+        }
+
+        .action-btn.delete {
+            background: rgba(220, 53, 69, 0.1);
+            color: var(--danger);
+        }
+
+        .action-btn.delete:hover {
+            background: var(--danger);
+            color: white;
+            transform: translateY(-1px);
+        }
+
+        .pagination {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-top: 20px;
+            flex-wrap: wrap;
+            gap: 10px;
+        }
+
+        .pagination-controls {
+            display: flex;
+            gap: 8px;
+            align-items: center;
+        }
+
+        .page-btn {
+            padding: 8px 12px;
+            border-radius: 4px;
+            border: 1px solid var(--border-color);
+            background: var(--bg-card);
+            color: var(--text-primary);
+            cursor: pointer;
+            transition: var(--transition);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            min-width: 36px;
+        }
+
+        .page-btn:hover {
+            background: var(--hover-color);
+        }
+
+        .page-btn.active {
+            background: var(--primary);
+            color: white;
+            border-color: var(--primary);
+        }
+
+        .page-btn:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+        }
+
+        .empty-state {
+            padding: 40px 20px;
+            text-align: center;
+            color: var(--text-secondary);
+        }
+
+        .empty-icon {
+            font-size: 48px;
+            margin-bottom: 15px;
+            opacity: 0.5;
+        }
+
+        /* Modal Styles */
+        .modal-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(0, 0, 0, 0.5);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            z-index: 1000;
+            opacity: 0;
+            visibility: hidden;
+            transition: var(--transition);
+            backdrop-filter: blur(4px);
+        }
+
+        .modal-overlay.active {
+            opacity: 1;
+            visibility: visible;
+        }
+
+        .modal {
+            background: var(--bg-card);
+            border-radius: var(--border-radius);
+            box-shadow: var(--box-shadow-lg);
+            width: 90%;
+            max-width: 600px;
+            max-height: 90vh;
+            overflow-y: auto;
+            transform: translateY(20px);
+            transition: var(--transition);
+            position: relative;
+        }
+
+        .modal-overlay.active .modal {
+            transform: translateY(0);
+        }
+
+        .modal::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 4px;
+            background: var(--gradient-primary);
+        }
+
+        .modal-header {
+            padding: 20px;
+            border-bottom: 1px solid var(--border-color);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .modal-title {
+            font-size: 20px;
+            font-weight: 600;
+        }
+
+        .modal-close {
+            background: none;
+            border: none;
+            font-size: 20px;
+            cursor: pointer;
+            color: var(--text-secondary);
+            transition: var(--transition);
+            width: 32px;
+            height: 32px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .modal-close:hover {
+            color: var(--text-primary);
+            background: var(--hover-color);
+        }
+
+        .modal-body {
+            padding: 20px;
+        }
+
+        .form-group {
+            margin-bottom: 20px;
+        }
+
+        .form-label {
+            display: block;
+            margin-bottom: 8px;
+            font-weight: 600;
+            color: var(--text-primary);
+        }
+
+        .form-control {
+            width: 100%;
+            padding: 12px 15px;
+            border-radius: var(--border-radius-sm);
+            border: 1px solid var(--border-color);
+            background: var(--bg-card);
+            color: var(--text-primary);
+            font-size: 14px;
+            transition: var(--transition);
+        }
+
+        .form-control:focus {
+            outline: none;
+            border-color: var(--primary);
+            box-shadow: 0 0 0 3px rgba(30, 144, 255, 0.2);
+        }
+
+        .form-row {
+            display: flex;
+            gap: 15px;
+        }
+
+        .form-row .form-group {
+            flex: 1;
+        }
+
+        .modal-footer {
+            padding: 20px;
+            border-top: 1px solid var(--border-color);
+            display: flex;
+            justify-content: flex-end;
+            gap: 10px;
+        }
+
+        /* Toast Notification */
+        .toast-container {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            z-index: 1100;
+        }
+
+        .toast {
+            padding: 15px 20px;
+            border-radius: var(--border-radius);
+            margin-bottom: 10px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            box-shadow: var(--box-shadow-lg);
+            transform: translateX(100%);
+            opacity: 0;
+            transition: transform 0.3s ease, opacity 0.3s ease;
+        }
+
+        .toast.show {
+            transform: translateX(0);
+            opacity: 1;
+        }
+
+        .toast.success {
+            background: var(--success);
+            color: white;
+        }
+
+        .toast.error {
+            background: var(--danger);
+            color: white;
+        }
+
+        .toast.info {
+            background: var(--primary);
+            color: white;
+        }
+        /* Advanced Patient Management Styles */
+.patient-row {
+  cursor: pointer;
+  transition: all 0.2s ease;
 }
 
-document.getElementById("searchInput").addEventListener("input", e => {
-  loadPatients(e.target.value);
-});
+.patient-row:hover {
+  background: var(--hover-color) !important;
+  transform: translateY(-1px);
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+}
 
-// Initial load
-window.addEventListener('DOMContentLoaded', () => {
-  loadPatients();
-});
-</script>
+.cin-badge {
+  background: var(--success);
+  color: white;
+  padding: 2px 6px;
+  border-radius: 4px;
+  font-size: 11px;
+  font-weight: 600;
+}
+
+.no-cin, .no-phone, .no-city {
+  color: var(--text-secondary);
+  font-style: italic;
+}
+
+.phone-cell {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.phone-link {
+  color: var(--primary);
+  text-decoration: none;
+}
+
+.phone-link:hover {
+  text-decoration: underline;
+}
+
+.city-tag {
+  background: var(--primary-light);
+  color: var(--primary-dark);
+  padding: 2px 8px;
+  border-radius: 12px;
+  font-size: 11px;
+  border: 1px solid var(--primary);
+}
+
+.action-buttons {
+  display: flex;
+  gap: 4px;
+  justify-content: center;
+}
+
+.action-btn {
+  width: 32px;
+  height: 32px;
+  border: none;
+  border-radius: 4px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  font-size: 12px;
+}
+
+.action-btn.view {
+  background: rgba(30, 144, 255, 0.1);
+  color: var(--primary);
+}
+
+.action-btn.appointment {
+  background: rgba(40, 167, 69, 0.1);
+  color: var(--success);
+}
+
+.action-btn.edit {
+  background: rgba(255, 193, 7, 0.1);
+  color: var(--warning);
+}
+
+.action-btn.history {
+  background: rgba(108, 117, 125, 0.1);
+  color: var(--gray);
+}
+
+.action-btn:hover {
+  transform: translateY(-1px);
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+}
+
+.action-btn.view:hover { background: var(--primary); color: white; }
+.action-btn.appointment:hover { background: var(--success); color: white; }
+.action-btn.edit:hover { background: var(--warning); color: white; }
+.action-btn.history:hover { background: var(--gray); color: white; }
+
+/* Advanced Form Styles */
+.advanced-form .form-control.small {
+  padding: 6px 10px;
+  font-size: 13px;
+}
+
+.advanced-filters {
+  border-left: 1px solid var(--border-color);
+  padding-left: 15px;
+  margin-left: 10px;
+}
+
+.patient-info-card {
+  background: var(--bg-secondary);
+  padding: 15px;
+  border-radius: var(--border-radius-sm);
+  margin-bottom: 20px;
+  border-left: 4px solid var(--primary);
+}
+
+.patient-stats {
+  margin-top: 20px;
+  padding-top: 20px;
+  border-top: 1px solid var(--border-color);
+}
+
+.stats-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+  gap: 15px;
+  margin-top: 15px;
+}
+
+.stat-item {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 10px;
+  background: var(--bg-secondary);
+  border-radius: var(--border-radius-sm);
+}
+
+.stat-item i {
+  color: var(--primary);
+  font-size: 16px;
+}
+
+/* Enhanced Pagination */
+.pagination-info {
+  color: var(--text-secondary);
+  font-size: 13px;
+}
+
+.page-numbers {
+  display: flex;
+  gap: 4px;
+}
+
+/* Loading States */
+.skeleton-loading {
+  background: linear-gradient(90deg, var(--bg-secondary) 25%, var(--hover-color) 50%, var(--bg-secondary) 75%);
+  background-size: 200% 100%;
+  animation: loading 1.5s infinite;
+}
+
+@keyframes loading {
+  0% { background-position: 200% 0; }
+  100% { background-position: -200% 0; }
+}
+
+/* Responsive Improvements */
+@media (max-width: 768px) {
+  .action-buttons {
+    flex-direction: column;
+  }
+  
+  .action-btn {
+    width: 28px;
+    height: 28px;
+  }
+  
+  .stats-grid {
+    grid-template-columns: 1fr;
+  }
+  
+  .advanced-filters {
+    flex-direction: column;
+    border-left: none;
+    border-top: 1px solid var(--border-color);
+    padding-left: 0;
+    padding-top: 10px;
+    margin-left: 0;
+    margin-top: 10px;
+  }
+}
+
+/* Print Styles */
+@media print {
+  .header, .pagination, .action-buttons {
+    display: none !important;
+  }
+  
+  .card {
+    box-shadow: none !important;
+    border: 1px solid #ccc !important;
+  }
+}
+        /* Responsive Design */
+        @media (max-width: 1024px) {
+            .header {
+                flex-direction: column;
+                align-items: flex-start;
+            }
+            
+            .controls {
+                width: 100%;
+                justify-content: space-between;
+            }
+            
+            #searchBox {
+                width: 250px;
+            }
+        }
+
+        @media (max-width: 768px) {
+            .container {
+                padding: 10px;
+            }
+            
+            .toolbar {
+                width: 100%;
+            }
+            
+            #searchBox {
+                width: 100%;
+            }
+            
+            .form-row {
+                flex-direction: column;
+                gap: 0;
+            }
+            
+            table {
+                display: block;
+                overflow-x: auto;
+            }
+        }
+
+        @media (max-width: 480px) {
+            .pagination {
+                flex-direction: column;
+                align-items: flex-start;
+            }
+            
+            .pagination-controls {
+                margin-top: 10px;
+            }
+            
+            .action-buttons {
+                flex-direction: column;
+            }
+        }
+
+        /* Loading animation for table rows */
+        .loading-row {
+            animation: shimmer 1.5s infinite linear;
+            background: linear-gradient(
+                to right,
+                var(--bg-card) 0%,
+                var(--hover-color) 50%,
+                var(--bg-card) 100%
+            );
+            background-size: 1000px 100%;
+        }
+
+        @keyframes shimmer {
+            0% {
+                background-position: -1000px 0;
+            }
+            100% {
+                background-position: 1000px 0;
+            }
+        }
+
+        /* Custom scrollbar */
+        ::-webkit-scrollbar {
+            width: 8px;
+            height: 8px;
+        }
+
+        ::-webkit-scrollbar-track {
+            background: var(--bg-secondary);
+            border-radius: 4px;
+        }
+
+        ::-webkit-scrollbar-thumb {
+            background: var(--gray);
+            border-radius: 4px;
+        }
+
+        ::-webkit-scrollbar-thumb:hover {
+            background: var(--primary);
+        }
+    </style>
+</head>
+<body class="light-theme">
+    <div class="container">
+        <div class="header">
+            <h1>
+                <i class="fas fa-user-injured"></i>
+                Patients <span class="pill" id="totalCount">—</span>
+            </h1>
+
+            <div class="controls">
+                <div class="toolbar">
+                    <div class="search-container">
+                        <i class="fas fa-search search-icon"></i>
+                        <input id="searchBox" type="search" placeholder="Rechercher par nom, prénom, CIN, téléphone ou ville...">
+                    </div>
+                    <button id="clearSearch" class="btn secondary">
+                        <i class="fas fa-times"></i> Effacer
+                    </button>
+                    <button id="exportCsv" class="btn ghost export">
+                        <i class="fas fa-file-export"></i> Exporter CSV
+                    </button>
+                </div>
+
+                <button id="toggleTheme" class="btn secondary">
+                    <i class="fas fa-moon"></i> Mode Sombre
+                </button>
+                <button id="newPatientBtn" class="btn success">
+                    <i class="fas fa-plus"></i> Ajouter Patient
+                </button>
+            </div>
+        </div>
+
+        <div class="card">
+            <div class="topbar">
+                <div class="status-indicator">
+                    <div class="status-dot loading"></div>
+                    <div id="statusText">Chargement des patients…</div>
+                </div>
+                <div id="rangeDisplay">Affichage —</div>
+            </div>
+
+            <div style="overflow:auto">
+                <table id="patientsTable">
+                    <thead>
+                        <tr>
+                            <th data-col="Nom" class="sortable">Nom</th>
+                            <th data-col="Prenom" class="sortable">Prénom</th>
+                            <th data-col="CIN" class="sortable">CIN</th>
+                            <th data-col="Tel" class="sortable">Téléphone</th>
+                            <th data-col="Ville" class="sortable">Ville</th>
+                            <th style="width:120px;">Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody id="patientsTbody">
+                        <!-- Loading state -->
+                        <tr class="loading-row">
+                            <td colspan="6" style="text-align: center; padding: 20px;">
+                                <i class="fas fa-spinner fa-spin"></i> Chargement des données...
+                            </td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+
+            <div class="pagination" id="pagination">
+                <div id="pageInfo">Page 1 sur 1</div>
+                <div class="pagination-controls">
+                    <button id="firstPage" class="page-btn" disabled>
+                        <i class="fas fa-angle-double-left"></i>
+                    </button>
+                    <button id="prevPage" class="page-btn" disabled>
+                        <i class="fas fa-angle-left"></i>
+                    </button>
+                    <div id="pageNumbers"></div>
+                    <button id="nextPage" class="page-btn" disabled>
+                        <i class="fas fa-angle-right"></i>
+                    </button>
+                    <button id="lastPage" class="page-btn" disabled>
+                        <i class="fas fa-angle-double-right"></i>
+                    </button>
+                </div>
+            </div>
+            <div id="emptyState" class="empty-state" style="display:none;">
+                <div class="empty-icon">
+                    <i class="fas fa-user-slash"></i>
+                </div>
+                <div>Aucun patient trouvé.</div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal: Add / Edit -->
+    <div id="modalRoot"></div>
+    
+    <!-- Toast Container -->
+    <div class="toast-container" id="toastContainer"></div>
+
+    <script>
+        // Your existing JavaScript code would go here
+        // This is just a placeholder to show where it would be
+        console.log("Patient management system initialized");
+    </script>
 </body>
 </html>

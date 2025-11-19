@@ -23,6 +23,7 @@ getPatientForDoc: (idp) => ipcRenderer.invoke('get-patient-for-doc', idp),
   // ---------------------------
   getAppointmentsByDate: (date) => ipcRenderer.invoke('get-appointments-by-date', date),
   addAppointment: (appt) => ipcRenderer.invoke('add-appointment', appt),
+  updatePatient: (patient) => ipcRenderer.invoke('update-patient', patient),
 
   // ---------------------------
   // Consultation
