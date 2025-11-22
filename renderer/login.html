@@ -2,113 +2,535 @@
 <html lang="fr">
 <head>
   <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Connexion - Clinique</title>
-  <link rel="stylesheet" href="style.css" />
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
   <style>
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    }
+
     body {
-      font-family: Arial, sans-serif;
-      background: #e6f0ff;
+      background: #0a1f44;
       display: flex;
       justify-content: center;
       align-items: center;
-      height: 100vh;
+      min-height: 100vh;
+      overflow: hidden;
+      position: relative;
     }
 
+    .background-container {
+      position: absolute;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      z-index: -1;
+      overflow: hidden;
+    }
+
+    .background-image {
+      position: absolute;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      background-image: url('../assets/logo.png');
+      background-size: cover;
+      background-position: center;
+      filter: blur(8px);
+      transform: scale(1.1);
+    }
+
+    /* .background-overlay {
+      position: absolute;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      background: linear-gradient(135deg, rgba(10, 31, 68, 0.85) 0%, rgba(0, 74, 173, 0.75) 100%);
+    } */
+
     .login-container {
-      background: white;
-      padding: 30px;
-      border-radius: 8px;
-      box-shadow: 0px 4px 10px rgba(0, 0, 0, 0.2);
-      width: 350px;
+      background: rgba(255, 255, 255, 0.95);
+      padding: 40px 35px;
+      border-radius: 20px;
+      box-shadow: 0 15px 35px rgba(0, 0, 0, 0.3);
+      width: 420px;
+      max-width: 90vw;
       text-align: center;
+      position: relative;
+      overflow: hidden;
+      backdrop-filter: blur(10px);
+      transform: translateY(0);
+      transition: transform 0.4s ease, box-shadow 0.4s ease;
+    }
+
+    .login-container:hover {
+      transform: translateY(-5px);
+      box-shadow: 0 20px 40px rgba(0, 0, 0, 0.4);
+    }
+
+    .login-container::before {
+      content: '';
+      position: absolute;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 5px;
+      background: linear-gradient(90deg, #007bff, #00c6ff, #007bff);
+      background-size: 200% 100%;
+      animation: shimmer 3s infinite linear;
+    }
+
+    @keyframes shimmer {
+      0% { background-position: -200% 0; }
+      100% { background-position: 200% 0; }
+    }
+
+    .logo {
+      width: 80px;
+      height: 80px;
+      margin: 0 auto 20px;
+      background: linear-gradient(135deg, #007bff, #00c6ff);
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      box-shadow: 0 5px 15px rgba(0, 123, 255, 0.4);
+    }
+
+    .logo i {
+      font-size: 36px;
+      color: white;
     }
 
     h2 {
-      margin-bottom: 20px;
+      margin-bottom: 30px;
       color: #004aad;
+      font-weight: 600;
+      font-size: 28px;
+      position: relative;
+      display: inline-block;
+    }
+
+    h2::after {
+      content: '';
+      position: absolute;
+      bottom: -10px;
+      left: 50%;
+      transform: translateX(-50%);
+      width: 50px;
+      height: 3px;
+      background: linear-gradient(90deg, #007bff, #00c6ff);
+      border-radius: 3px;
+    }
+
+    .input-group {
+      position: relative;
+      margin-bottom: 25px;
+    }
+
+    .input-group i {
+      position: absolute;
+      left: 15px;
+      top: 50%;
+      transform: translateY(-50%);
+      color: #007bff;
+      font-size: 18px;
+      transition: color 0.3s;
     }
 
     input {
       width: 100%;
-      padding: 10px;
-      margin: 8px 0;
-      border: 1px solid #ccc;
-      border-radius: 5px;
+      padding: 15px 15px 15px 50px;
+      border: 2px solid #e1e5ee;
+      border-radius: 10px;
       outline: none;
+      font-size: 16px;
+      transition: all 0.3s;
+      background: rgba(255, 255, 255, 0.8);
+    }
+
+    input:focus {
+      border-color: #007bff;
+      box-shadow: 0 0 0 3px rgba(0, 123, 255, 0.2);
+      background: white;
+    }
+
+    input:focus + i {
+      color: #004aad;
+    }
+
+    .password-toggle {
+      position: absolute;
+      right: 15px;
+      top: 50%;
+      transform: translateY(-50%);
+      color: #777;
+      cursor: pointer;
+      font-size: 18px;
+      transition: color 0.3s;
+    }
+
+    .password-toggle:hover {
+      color: #007bff;
+    }
+
+
+
+
+
+
+
+    .forgot-password {
+      color: #007bff;
+      text-decoration: none;
+      transition: color 0.3s;
+    }
+
+    .forgot-password:hover {
+      color: #004aad;
+      text-decoration: underline;
     }
 
     button {
       width: 100%;
-      padding: 10px;
-      background: #007bff;
+      padding: 15px;
+      background: linear-gradient(135deg, #007bff, #00c6ff);
       color: white;
       border: none;
-      border-radius: 5px;
+      border-radius: 10px;
       cursor: pointer;
-      transition: 0.3s;
+      font-size: 16px;
+      font-weight: 600;
+      transition: all 0.3s;
+      box-shadow: 0 5px 15px rgba(0, 123, 255, 0.4);
+      position: relative;
+      overflow: hidden;
     }
 
     button:hover {
-      background: #0056b3;
+      background: linear-gradient(135deg, #0069d9, #009ed8);
+      box-shadow: 0 8px 20px rgba(0, 123, 255, 0.5);
+      transform: translateY(-2px);
+    }
+
+    button:active {
+      transform: translateY(0);
+    }
+
+    button::after {
+      content: '';
+      position: absolute;
+      top: 50%;
+      left: 50%;
+      width: 5px;
+      height: 5px;
+      background: rgba(255, 255, 255, 0.5);
+      opacity: 0;
+      border-radius: 100%;
+      transform: scale(1, 1) translate(-50%);
+      transform-origin: 50% 50%;
+    }
+
+    button:focus:not(:active)::after {
+      animation: ripple 1s ease-out;
+    }
+
+    @keyframes ripple {
+      0% {
+        transform: scale(0, 0);
+        opacity: 0.5;
+      }
+      100% {
+        transform: scale(20, 20);
+        opacity: 0;
+      }
+    }
+
+    .message {
+      margin-top: 20px;
+      padding: 12px;
+      border-radius: 8px;
+      font-weight: 500;
+      transition: all 0.3s;
+      opacity: 0;
+      transform: translateY(10px);
+    }
+
+    .message.show {
+      opacity: 1;
+      transform: translateY(0);
     }
 
     .error {
-      color: red;
-      margin-top: 10px;
+      background: rgba(255, 0, 0, 0.1);
+      color: #d32f2f;
+      border-left: 4px solid #d32f2f;
     }
 
     .success {
-      color: green;
-      margin-top: 10px;
+      background: rgba(76, 175, 80, 0.1);
+      color: #2e7d32;
+      border-left: 4px solid #2e7d32;
+    }
+
+    .loading {
+      display: inline-block;
+      width: 20px;
+      height: 20px;
+      border: 3px solid rgba(255, 255, 255, 0.3);
+      border-radius: 50%;
+      border-top-color: white;
+      animation: spin 1s ease-in-out infinite;
+      margin-right: 10px;
+      vertical-align: middle;
+    }
+
+    @keyframes spin {
+      to { transform: rotate(360deg); }
+    }
+
+    .footer {
+      margin-top: 25px;
+      font-size: 14px;
+      color: #666;
+    }
+
+    .language-selector {
+      position: absolute;
+      top: 20px;
+      right: 20px;
+    }
+
+    .language-selector select {
+      padding: 8px 12px;
+      border-radius: 6px;
+      border: 1px solid #e1e5ee;
+      background: white;
+      color: #333;
+      font-size: 14px;
+      outline: none;
+      cursor: pointer;
+    }
+
+    .particles {
+      position: absolute;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      z-index: -1;
+    }
+
+    .particle {
+      position: absolute;
+      background: rgba(255, 255, 255, 0.5);
+      border-radius: 50%;
+      animation: float 15s infinite linear;
+    }
+
+    @keyframes float {
+      0% {
+        transform: translateY(0) rotate(0deg);
+        opacity: 0;
+      }
+      10% {
+        opacity: 1;
+      }
+      90% {
+        opacity: 1;
+      }
+      100% {
+        transform: translateY(-1000%) rotate(720deg);
+        opacity: 0;
+      }
+    }
+
+    @media (max-width: 480px) {
+      .login-container {
+        padding: 30px 25px;
+      }
+      
+      h2 {
+        font-size: 24px;
+      }
+      
+      .remember-forgot {
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 10px;
+      }
     }
   </style>
 </head>
 <body>
+  <div class="background-container">
+    <div class="background-image"></div>
+    <div class="background-overlay"></div>
+  </div>
+
+  <div class="particles" id="particles"></div>
+
   <div class="login-container">
+    
+
+    <div class="logo">
+      <i class="fas fa-stethoscope"></i>
+    </div>
+
     <h2>Connexion au système</h2>
-    <input type="text" id="username" placeholder="Nom d'utilisateur" />
-    <input type="password" id="password" placeholder="Mot de passe" />
-    <button id="login-btn">Se connecter</button>
-    <div id="message"></div>
+
+    <div class="input-group">
+      <i class="fas fa-user"></i>
+      <input type="text" id="username" placeholder="Nom d'utilisateur" autocomplete="username" />
+    </div>
+
+    <div class="input-group">
+      <i class="fas fa-lock"></i>
+      <input type="password" id="password" placeholder="Mot de passe" autocomplete="current-password" />
+      <span class="password-toggle" id="password-toggle">
+        <i class="fas fa-eye"></i>
+      </span>
+    </div>
+
+    
+
+    <button id="login-btn">
+      <span id="btn-text">Se connecter</span>
+      <span id="btn-loading" class="loading" style="display: none;"></span>
+    </button>
+
+    <div id="message" class="message"></div>
+
+    <div class="footer">
+      &copy; 2025 Clinique Medical System. Tous droits réservés.anouar harchi
+    </div>
   </div>
 
   <script>
-    const loginBtn = document.getElementById('login-btn');
-    const msgDiv = document.getElementById('message');
+    // Create floating particles
+    function createParticles() {
+      const particlesContainer = document.getElementById('particles');
+      const particleCount = 20;
+      
+      for (let i = 0; i < particleCount; i++) {
+        const particle = document.createElement('div');
+        particle.classList.add('particle');
+        
+        // Random properties
+        const size = Math.random() * 10 + 5;
+        const posX = Math.random() * 100;
+        const delay = Math.random() * 15;
+        const duration = Math.random() * 10 + 15;
+        
+        particle.style.width = `${size}px`;
+        particle.style.height = `${size}px`;
+        particle.style.left = `${posX}%`;
+        particle.style.animationDelay = `${delay}s`;
+        particle.style.animationDuration = `${duration}s`;
+        
+        particlesContainer.appendChild(particle);
+      }
+    }
 
-    loginBtn.addEventListener('click', async () => {
+    // Toggle password visibility
+    document.getElementById('password-toggle').addEventListener('click', function() {
+      const passwordInput = document.getElementById('password');
+      const icon = this.querySelector('i');
+      
+      if (passwordInput.type === 'password') {
+        passwordInput.type = 'text';
+        icon.classList.remove('fa-eye');
+        icon.classList.add('fa-eye-slash');
+      } else {
+        passwordInput.type = 'password';
+        icon.classList.remove('fa-eye-slash');
+        icon.classList.add('fa-eye');
+      }
+    });
+
+    // Form submission
+    document.getElementById('login-btn').addEventListener('click', handleLogin);
+    
+    // Also allow form submission with Enter key
+    document.addEventListener('keydown', function(e) {
+      if (e.key === 'Enter') {
+        handleLogin();
+      }
+    });
+
+    async function handleLogin() {
       const username = document.getElementById('username').value.trim();
       const password = document.getElementById('password').value.trim();
+      const messageDiv = document.getElementById('message');
+      const btnText = document.getElementById('btn-text');
+      const btnLoading = document.getElementById('btn-loading');
+      const loginBtn = document.getElementById('login-btn');
 
+      // Reset message
+      messageDiv.textContent = '';
+      messageDiv.className = 'message';
+      
+      // Validate inputs
       if (!username || !password) {
-        msgDiv.textContent = 'Veuillez remplir tous les champs.';
-        msgDiv.className = 'error';
+        showMessage('Veuillez remplir tous les champs.', 'error');
         return;
       }
 
+      // Show loading state
+      btnText.style.display = 'none';
+      btnLoading.style.display = 'inline-block';
+      loginBtn.disabled = true;
+
       try {
-        // Vérifier les identifiants via le main process
+        // Simulate API call delay
+        await new Promise(resolve => setTimeout(resolve, 1500));
+        
+        // Check credentials via the main process
         const result = await window.electronAPI.checkLogin({ username, password });
 
         if (result.success) {
-  msgDiv.textContent = `Bienvenue ${result.user.Nom || result.user.Login} !`;
-  msgDiv.className = 'success';
-
-  setTimeout(() => {
-    // Open the dashboard based on user role (Droit)
-    window.electronAPI.openDashboard(result.user.Droit?.toLowerCase() || 'dashboard');
-  }, 500);
-}
- else {
-          msgDiv.textContent = result.message || 'Identifiants incorrects.';
-          msgDiv.className = 'error';
+          showMessage(`Bienvenue ${result.user.Nom || result.user.Login} !`, 'success');
+          
+          setTimeout(() => {
+            // Open the dashboard based on user role (Droit)
+            window.electronAPI.openDashboard(result.user.Droit?.toLowerCase() || 'dashboard');
+          }, 1000);
+        } else {
+          showMessage(result.message || 'Identifiants incorrects.', 'error');
         }
       } catch (err) {
         console.error('Erreur login:', err);
-        msgDiv.textContent = 'Erreur de connexion au serveur.';
-        msgDiv.className = 'error';
+        showMessage('Erreur de connexion au serveur.', 'error');
+      } finally {
+        // Reset button state
+        btnText.style.display = 'inline-block';
+        btnLoading.style.display = 'none';
+        loginBtn.disabled = false;
       }
+    }
+
+    function showMessage(text, type) {
+      const messageDiv = document.getElementById('message');
+      messageDiv.textContent = text;
+      messageDiv.className = `message ${type} show`;
+    }
+
+    // Language selector
+    document.getElementById('language').addEventListener('change', function() {
+      const lang = this.value;
+      // In a real app, you would update all text based on selected language
+      console.log('Language changed to:', lang);
     });
+
+    // Initialize particles on load
+    window.addEventListener('load', createParticles);
   </script>
 </body>
 </html>

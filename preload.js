@@ -30,8 +30,12 @@ getPatientForDoc: (idp) => ipcRenderer.invoke('get-patient-for-doc', idp),
   // ---------------------------
   addConsultation: (c) => ipcRenderer.invoke('add-consultation', c),
   getConsultationsByPatient: (IDP) => ipcRenderer.invoke('get-consultations-by-patient', IDP),
-
-  // ---------------------------
+  getPatientByCIN: (cin) => ipcRenderer.invoke('get-patient-by-cin', cin),
+  updateConsultation: (c) => ipcRenderer.invoke('update-consultation', c),
+  deleteConsultation: (id) => ipcRenderer.invoke('delete-consultation', id),
+  getConsultationById: (id) => ipcRenderer.invoke('get-consultation-by-id', id),
+  getConsultations: () => ipcRenderer.invoke('get-consultations'),
+  getConsultationFile: (fileName) => ipcRenderer.invoke('get-consultation-file', fileName),  // ---------------------------
   // Ordonnance
   // ---------------------------
   addOrdonnance: (o) => ipcRenderer.invoke('add-ordonnance', o),
