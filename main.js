@@ -290,10 +290,190 @@ ipcMain.handle('get-consultation-file', async (event, fileName) => {
   }
 });
 // ======================================================
-// ORDONNANCE
+// ENHANCED ORDONNANCE FUNCTIONS (CIN-BASED)
 // ======================================================
-ipcMain.handle('add-ordonnance', (event, o) => db.addOrdonnance(o));
 
+// Get or create current consultation for a patient
+ipcMain.handle('get-or-create-current-consultation', async (event, { cin, medecinName }) => {
+  try {
+    // 1. Find patient by CIN
+    const patient = await db.getPatientByCIN(cin);
+    if (!patient) {
+      throw new Error(`Patient avec CIN ${cin} non trouvé`);
+    }
+
+    const today = new Date().toISOString().split('T')[0];
+    
+    // 2. Look for today's consultation
+    const consultations = await db.getConsultationsByPatient(patient.IDP);
+    const existingConsultation = consultations.find(consult => {
+      if (consult.DateCreation) {
+        const consultDate = new Date(consult.DateCreation).toISOString().split('T')[0];
+        return consultDate === today;
+      }
+      return false;
+    });
+
+    if (existingConsultation) {
+      return existingConsultation.IDC;
+    }
+
+    // 3. Create new consultation for today
+    const newConsultation = {
+      IDP: patient.IDP,
+      CIN: cin,
+      Motif: 'Consultation médicale',
+      Diagnostic: '',
+      Observations: '',
+      Remarques: `Consultation du ${today}`,
+      NomMedecin: medecinName
+    };
+
+    const consultationId = await db.addConsultation(newConsultation);
+    return consultationId;
+
+  } catch (error) {
+    console.error('Error in get-or-create-current-consultation:', error);
+    throw error;
+  }
+});
+
+// Add ordonnance using CIN - FIXED VERSION
+ipcMain.handle('add-ordonnance-by-cin', async (event, data) => {
+  try {
+    // Validate required fields
+    if (!data.patientCIN) {
+      throw new Error('CIN du patient est requis');
+    }
+    if (!data.medecinName) {
+      throw new Error('Nom du médecin est requis');
+    }
+
+    // Get or create consultation - CALL THE DB FUNCTION DIRECTLY
+    const consultationId = await db.getOrCreateCurrentConsultation(data.patientCIN, data.medecinName);
+
+    // Get patient ID
+    const patient = await db.getPatientByCIN(data.patientCIN);
+    if (!patient) {
+      throw new Error(`Patient avec CIN ${data.patientCIN} non trouvé`);
+    }
+
+    // Create ordonnance using existing function
+    const ordonnanceData = {
+      IDC: consultationId,
+      IDP: patient.IDP,
+      M1: data.M1 || '',
+      P1: data.P1 || '',
+      D1: data.D1 || '',
+      M2: data.M2 || '',
+      P2: data.P2 || '',
+      D2: data.D2 || '',
+      M3: data.M3 || '',
+      P3: data.P3 || '',
+      D3: data.D3 || '',
+      Remarques: data.Remarques || '',
+      NomMedecin: data.medecinName
+    };
+
+    const result = await db.addOrdonnance(ordonnanceData);
+    return result;
+
+  } catch (error) {
+    console.error('Error in add-ordonnance-by-cin:', error);
+    throw error;
+  }
+});
+
+// Update ordonnance using CIN
+ipcMain.handle('update-ordonnance-by-cin', async (event, data) => {
+  try {
+    if (!data.patientCIN) {
+      throw new Error('CIN du patient est requis');
+    }
+
+    // Get patient ID
+    const patient = await db.getPatientByCIN(data.patientCIN);
+    if (!patient) {
+      throw new Error(`Patient avec CIN ${data.patientCIN} non trouvé`);
+    }
+
+    // Update ordonnance using existing function
+    const updateData = {
+      IDR: data.IDR,
+      IDP: patient.IDP,
+      Medicament1: data.Medicament1 || '',
+      Posologie1: data.Posologie1 || '',
+      Duree1: data.Duree1 || '',
+      Medicament2: data.Medicament2 || '',
+      Posologie2: data.Posologie2 || '',
+      Duree2: data.Duree2 || '',
+      Medicament3: data.Medicament3 || '',
+      Posologie3: data.Posologie3 || '',
+      Duree3: data.Duree3 || '',
+      Remarques: data.Remarques || ''
+    };
+
+    const result = await db.updateOrdonnance(updateData);
+    return result;
+
+  } catch (error) {
+    console.error('Error in update-ordonnance-by-cin:', error);
+    throw error;
+  }
+});
+
+// Get ordonnances by patient CIN
+ipcMain.handle('get-ordonnances-by-patient-cin', async (event, cin) => {
+  try {
+    const patient = await db.getPatientByCIN(cin);
+    if (!patient) {
+      throw new Error(`Patient avec CIN ${cin} non trouvé`);
+    }
+
+    const allOrdonnances = await db.getOrdonnances();
+    const patientOrdonnances = allOrdonnances.filter(o => o.IDP === patient.IDP);
+    
+    return patientOrdonnances;
+
+  } catch (error) {
+    console.error('Error in get-ordonnances-by-patient-cin:', error);
+    throw error;
+  }
+});
+
+// Get patient's latest consultation
+ipcMain.handle('get-patient-latest-consultation', async (event, cin) => {
+  try {
+    const patient = await db.getPatientByCIN(cin);
+    if (!patient) {
+      return null;
+    }
+
+    const consultations = await db.getConsultationsByPatient(patient.IDP);
+    if (consultations.length === 0) {
+      return null;
+    }
+
+    // Sort by IDC descending to get the latest
+    const latestConsultation = consultations.sort((a, b) => b.IDC - a.IDC)[0];
+    return latestConsultation;
+
+  } catch (error) {
+    console.error('Error in get-patient-latest-consultation:', error);
+    throw error;
+  }
+});
+
+
+// ======================================================
+// EXISTING ORDONNANCE FUNCTIONS (make sure these exist)
+// ======================================================
+
+ipcMain.handle('add-ordonnance', (event, o) => db.addOrdonnance(o));
+ipcMain.handle('get-ordonnances', () => db.getOrdonnances());
+ipcMain.handle('get-ordonnance-by-id', (event, id) => db.getOrdonnanceById(id));
+ipcMain.handle('update-ordonnance', (event, o) => db.updateOrdonnance(o));
+ipcMain.handle('delete-ordonnance', (event, id) => db.deleteOrdonnance(id));
 // ======================================================
 // HONORAIRE
 // ======================================================
@@ -367,7 +547,11 @@ ipcMain.handle('update-appointment', (event, appt) => {
 ipcMain.handle('delete-appointment', (event, IDRv) =>
   db.deleteAppointmentById(IDRv)
 );
-
+// Add this to your main.js if it doesn't exist
+ipcMain.handle('get-suivi-docs', () => {
+  // You need to implement this function in db.js or return empty array for now
+  return [];
+});
 // ======================================================
 // OPEN DASHBOARD BASED ON ROLE
 // ======================================================

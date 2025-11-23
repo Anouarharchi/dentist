@@ -3,7 +3,12 @@ const path = require('path');
 
 const dbPath = path.join(__dirname, 'db', 'clinic.db');
 const db = new sqlite3.Database(dbPath);
-
+// ADD THESE LINES TO PREVENT SQLITE_BUSY ERRORS:
+db.configure("busyTimeout", 5000); // 5 second timeout
+db.exec("PRAGMA journal_mode = WAL;", (err) => {
+  if (err) console.error("Failed to set WAL mode:", err);
+  else console.log("WAL mode enabled");
+});
 // ===============================
 // 🧱 Check & Create HistoriqueDate Column
 // ===============================
@@ -56,6 +61,8 @@ db.serialize(() => {
     IDP INTEGER, CIN TEXT, Motif TEXT, Diagnostic TEXT,
     Observations TEXT, Remarques TEXT, NomMedecin TEXT,
     PiècesJointes_FileData BLOB, PiècesJointes_FileName TEXT, PiècesJointes_FileType TEXT,
+    ConsultationID TEXT UNIQUE,
+    DateCreation DATETIME DEFAULT CURRENT_TIMESTAMP,  
     FOREIGN KEY(IDP) REFERENCES Patients(IDP)
   )`);
 
@@ -422,9 +429,28 @@ function deleteConsultation(IDC) {
   });
 }
 
+
+
 // ======================================
-// 📌 ORDONNANCE
+// 📌 BASIC ORDONNANCE FUNCTIONS (Add these)
 // ======================================
+
+function getOrdonnances() {
+  return new Promise((resolve, reject) => {
+    db.all("SELECT * FROM Ordonnance", [], (err, rows) => {
+      if (err) reject(err); else resolve(rows);
+    });
+  });
+}
+
+function getOrdonnanceById(IDR) {
+  return new Promise((resolve, reject) => {
+    db.get("SELECT * FROM Ordonnance WHERE IDR=?", [IDR], (err, row) => {
+      if (err) reject(err); else resolve(row);
+    });
+  });
+}
+
 function addOrdonnance(data) {
   const sql = `
     INSERT INTO Ordonnance
@@ -442,22 +468,6 @@ function addOrdonnance(data) {
       data.Remarques
     ], function (err) {
       if (err) reject(err); else resolve({ IDR: this.lastID });
-    });
-  });
-}
-
-function getOrdonnances() {
-  return new Promise((resolve, reject) => {
-    db.all("SELECT * FROM Ordonnance", [], (err, rows) => {
-      if (err) reject(err); else resolve(rows);
-    });
-  });
-}
-
-function getOrdonnanceById(IDR) {
-  return new Promise((resolve, reject) => {
-    db.get("SELECT * FROM Ordonnance WHERE IDR=?", [IDR], (err, row) => {
-      if (err) reject(err); else resolve(row);
     });
   });
 }
@@ -484,9 +494,237 @@ function updateOrdonnance(o) {
 
 function deleteOrdonnance(IDR) {
   return new Promise((resolve, reject) => {
-    db.run("DELETE FROM Ordonnance WHERE IDR=?", [IDR], function(err) {
-      if (err) reject(err); else resolve(true);
-    });
+    const maxRetries = 3;
+    let retries = 0;
+    
+    function attemptDelete() {
+      db.run("DELETE FROM Ordonnance WHERE IDR=?", [IDR], function(err) {
+        if (err) {
+          if (err.code === 'SQLITE_BUSY' && retries < maxRetries) {
+            retries++;
+            console.log(`Database busy, retrying delete (${retries}/${maxRetries})...`);
+            setTimeout(attemptDelete, 100 * retries); // Exponential backoff
+            return;
+          }
+          reject(err);
+        } else {
+          resolve(true);
+        }
+      });
+    }
+    
+    attemptDelete();
+  });
+}
+// ======================================
+// 📌 ENHANCED ORDONNANCE LOGIC
+// ======================================
+
+/**
+ * Get or create a consultation for a patient's current visit
+ * @param {string} patientCIN - Patient's CIN
+ * @param {string} medecinName - Doctor's name creating the prescription
+ * @returns {Promise} Consultation ID
+ */
+function getOrCreateCurrentConsultation(patientCIN, medecinName) {
+  return new Promise(async (resolve, reject) => {
+    try {
+      // 1. Find patient by CIN
+      const patient = await getPatientByCIN(patientCIN);
+      if (!patient) {
+        return reject(new Error(`Patient avec CIN ${patientCIN} non trouvé`));
+      }
+
+      const today = new Date().toISOString().split('T')[0];
+      
+      // 2. Look for today's consultation for this patient
+      const existingConsultation = await new Promise((resolve, reject) => {
+        db.get(
+          `SELECT * FROM Consultation 
+           WHERE IDP = ? AND date(IDC) = date(?) 
+           ORDER BY IDC DESC LIMIT 1`,
+          [patient.IDP, today],
+          (err, row) => {
+            if (err) reject(err); else resolve(row);
+          }
+        );
+      });
+
+      if (existingConsultation) {
+        // Return existing consultation for today
+        resolve(existingConsultation.IDC);
+      } else {
+        // 3. Create a new consultation for today
+        const newConsultation = {
+          IDP: patient.IDP,
+          CIN: patientCIN,
+          Motif: "Consultation médicale",
+          Diagnostic: "",
+          Observations: "",
+          Remarques: `Consultation du ${today}`,
+          NomMedecin: medecinName
+        };
+
+        const newConsultationId = await addConsultation(newConsultation);
+        resolve(newConsultationId);
+      }
+    } catch (error) {
+      reject(error);
+    }
+  });
+}
+
+/**
+ * Add prescription using patient CIN instead of IDs
+ * @param {Object} data - Prescription data with patient CIN
+ */
+function addOrdonnanceByCIN(data) {
+  return new Promise(async (resolve, reject) => {
+    try {
+      // Validate required fields
+      if (!data.patientCIN) {
+        return reject(new Error("CIN du patient est requis"));
+      }
+      if (!data.medecinName) {
+        return reject(new Error("Nom du médecin est requis"));
+      }
+
+      // Get or create consultation for this patient
+      const consultationId = await getOrCreateCurrentConsultation(
+        data.patientCIN, 
+        data.medecinName
+      );
+
+      // Get patient ID for the prescription
+      const patient = await getPatientByCIN(data.patientCIN);
+
+      // Create prescription linked to the consultation
+      const sql = `
+        INSERT INTO Ordonnance
+        (IDC, IDP, Medicament1, Posologie1, Duree1,
+         Medicament2, Posologie2, Duree2,
+         Medicament3, Posologie3, Duree3, Remarques)
+        VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+      `;
+
+      db.run(sql, [
+        consultationId, patient.IDP,
+        data.M1, data.P1, data.D1,
+        data.M2, data.P2, data.D2,
+        data.M3, data.P3, data.D3,
+        data.Remarques
+      ], function (err) {
+        if (err) reject(err); 
+        else resolve({ 
+          IDR: this.lastID,
+          IDC: consultationId,
+          IDP: patient.IDP
+        });
+      });
+
+    } catch (error) {
+      reject(error);
+    }
+  });
+}
+
+/**
+ * Update prescription using patient CIN
+ * @param {Object} data - Prescription data with patient CIN
+ */
+function updateOrdonnanceByCIN(data) {
+  return new Promise(async (resolve, reject) => {
+    try {
+      if (!data.patientCIN) {
+        return reject(new Error("CIN du patient est requis"));
+      }
+
+      // Get patient ID
+      const patient = await getPatientByCIN(data.patientCIN);
+      if (!patient) {
+        return reject(new Error(`Patient avec CIN ${data.patientCIN} non trouvé`));
+      }
+
+      const sql = `UPDATE Ordonnance SET 
+        IDP=?, Medicament1=?, Posologie1=?, Duree1=?,
+        Medicament2=?, Posologie2=?, Duree2=?,
+        Medicament3=?, Posologie3=?, Duree3=?, Remarques=? 
+        WHERE IDR=?`;
+
+      const params = [
+        patient.IDP,
+        data.Medicament1, data.Posologie1, data.Duree1,
+        data.Medicament2, data.Posologie2, data.Duree2,
+        data.Medicament3, data.Posologie3, data.Duree3,
+        data.Remarques, data.IDR
+      ];
+
+      db.run(sql, params, function(err) {
+        if (err) reject(err); else resolve(true);
+      });
+
+    } catch (error) {
+      reject(error);
+    }
+  });
+}
+
+/**
+ * Get prescriptions by patient CIN
+ * @param {string} patientCIN 
+ */
+function getOrdonnancesByPatientCIN(patientCIN) {
+  return new Promise(async (resolve, reject) => {
+    try {
+      const patient = await getPatientByCIN(patientCIN);
+      if (!patient) {
+        return reject(new Error(`Patient avec CIN ${patientCIN} non trouvé`));
+      }
+
+      const sql = `
+        SELECT o.*, c.DateCreation as DateConsultation, c.NomMedecin
+        FROM Ordonnance o
+        JOIN Consultation c ON o.IDC = c.IDC
+        WHERE o.IDP = ?
+        ORDER BY c.DateCreation DESC
+      `;
+
+      db.all(sql, [patient.IDP], (err, rows) => {
+        if (err) reject(err); else resolve(rows);
+      });
+
+    } catch (error) {
+      reject(error);
+    }
+  });
+}
+
+/**
+ * Get patient's latest consultation
+ * @param {string} patientCIN 
+ */
+function getPatientLatestConsultation(patientCIN) {
+  return new Promise(async (resolve, reject) => {
+    try {
+      const patient = await getPatientByCIN(patientCIN);
+      if (!patient) {
+        return resolve(null);
+      }
+
+      const sql = `
+        SELECT * FROM Consultation 
+        WHERE IDP = ? 
+        ORDER BY IDC DESC 
+        LIMIT 1
+      `;
+
+      db.get(sql, [patient.IDP], (err, row) => {
+        if (err) reject(err); else resolve(row);
+      });
+
+    } catch (error) {
+      reject(error);
+    }
   });
 }
 
@@ -601,7 +839,7 @@ module.exports = {
   deletePersonnel,
   addConsultation,
   getConsultationsByPatient,
-  addOrdonnance,
+
   addHonoraire,
   addReglement,
   addHistorique,
@@ -622,8 +860,14 @@ module.exports = {
   getPatientByCIN,
   deleteConsultation,
   updateConsultation,
-  deleteOrdonnance,
-  getOrdonnances,
-getOrdonnanceById,
-updateOrdonnance
+  addOrdonnanceByCIN,
+  updateOrdonnanceByCIN,
+  getOrdonnancesByPatientCIN,
+  getPatientLatestConsultation,
+  getOrCreateCurrentConsultation,
+   getOrdonnances,
+  getOrdonnanceById,
+  addOrdonnance,
+  updateOrdonnance,
+  deleteOrdonnance
 };

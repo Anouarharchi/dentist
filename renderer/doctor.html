@@ -1499,7 +1499,7 @@ window.openConsultDetails = async function(IDC){
   };
 };
 
-
+//
     function openConsultModal(data=null){
   const isEdit = !!data;
   const consult = data || { IDC:null, IDP:null, CIN:'', Motif:'', Diagnostic:'', Observations:'', Remarques:'', NomMedecin:'', PiècesJointes_FileName:'' };
@@ -1587,8 +1587,7 @@ window.openConsultDetails = async function(IDC){
     };
   }
 }
-
-
+//
     async function saveConsultation(payload, isEdit){
   try{
     if(isEdit) {
@@ -1625,155 +1624,398 @@ window.openConsultEdit = async function(IDC){
     }
 
     /* ===================== ORDONNANCES ===================== */
-    function renderOrdonnancesPage(){
-      $('pageTitle').textContent = 'Ordonnances';
-      $('pageSubtitle').textContent = 'Gestion des ordonnances';
-      const area = $('contentArea');
-      area.innerHTML = `
-        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:20px">
-          <h3>Ordonnances</h3>
-          <div><button id="addOrdoBtn" class="btn primary">+ Nouvelle Ordonnance</button></div>
-        </div>
-        <div style="overflow:auto">
-          <table class="table" id="ordonnTable">
-            <thead><tr><th>ID</th><th>Consultation</th><th>Patient</th><th>Medicaments</th><th>Actions</th></tr></thead>
-            <tbody id="ordonnTbody"></tbody>
-          </table>
-        </div>
-      `;
-      renderOrdonnancesTable();
-      document.getElementById('addOrdoBtn').addEventListener('click', ()=> openOrdonnanceModal());
-    }
+  function renderOrdonnancesPage(){
+  $('pageTitle').textContent = 'Ordonnances';
+  $('pageSubtitle').textContent = 'Gestion des ordonnances - Utilisez le CIN du patient';
+  const area = $('contentArea');
+  area.innerHTML = `
+    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:20px">
+      <h3>Ordonnances</h3>
+      <div><button id="addOrdoBtn" class="btn primary">+ Nouvelle Ordonnance</button></div>
+    </div>
+    <div style="overflow:auto">
+      <table class="table" id="ordonnTable">
+        <thead><tr><th>ID</th><th>Patient</th><th>CIN</th><th>Médecin</th><th>Médicaments</th><th>Date</th><th>Actions</th></tr></thead>
+        <tbody id="ordonnTbody"></tbody>
+      </table>
+    </div>
+  `;
+  renderOrdonnancesTable();
+  document.getElementById('addOrdoBtn').addEventListener('click', ()=> openOrdonnanceModal());
+}
 
     function renderOrdonnancesTable(){
-      const tbody = $('ordonnTbody');
-      const list = ordonnancesCache || [];
-      if(!list.length){ tbody.innerHTML = `<tr><td colspan="5" class="small muted">Aucune ordonnance</td></tr>`; return; }
-      tbody.innerHTML = list.map(o => {
-        const c = consultationsCache.find(x=>x.IDC===o.IDC) || {};
-        const p = patientsCache.find(x=>x.IDP===o.IDP) || {};
-        const meds = [o.Medicament1,o.Medicament2,o.Medicament3].filter(Boolean).join(', ');
-        return `<tr>
-          <td>${o.IDR}</td>
-          <td>${escapeHtml(c.Motif||'')} (${o.IDC||''})</td>
-          <td>${escapeHtml(p.Nom||'')} ${escapeHtml(p.Prenom||'')}</td>
-          <td>${escapeHtml(meds)}</td>
-          <td>
-            <button class="btn" onclick="openOrdonnanceDetails(${o.IDR})">Voir</button>
-            <button class="btn" onclick="openOrdonnanceEdit(${o.IDR})">Modifier</button>
-            <button class="btn danger" onclick="deleteOrdonnance(${o.IDR})">Supprimer</button>
-          </td>
-        </tr>`;
-      }).join('');
-    }
+  const tbody = $('ordonnTbody');
+  const list = ordonnancesCache || [];
+  if(!list.length){ tbody.innerHTML = `<tr><td colspan="7" class="small muted">Aucune ordonnance</td></tr>`; return; }
+  
+  // Create a promise chain to get consultation details for each ordonnance
+  const renderPromises = list.map(async (o) => {
+    const c = consultationsCache.find(x=>x.IDC===o.IDC) || {};
+    const p = patientsCache.find(x=>x.IDP===o.IDP) || {};
+    const meds = [o.Medicament1,o.Medicament2,o.Medicament3].filter(Boolean);
+    const medsText = meds.length > 0 ? meds.join(', ') : 'Aucun médicament';
+    
+    return `<tr>
+      <td>${o.IDR}</td>
+      <td>${escapeHtml(p.Nom||'')} ${escapeHtml(p.Prenom||'')}</td>
+      <td>${escapeHtml(p.CIN||'')}</td>
+      <td>${escapeHtml(c.NomMedecin||'Non spécifié')}</td>
+      <td>${escapeHtml(medsText)}</td>
+      <td>${escapeHtml(c.DateCreation ? new Date(c.DateCreation).toLocaleDateString() : 'N/A')}</td>
+      <td>
+        <button class="btn" onclick="openOrdonnanceDetails(${o.IDR})">Voir</button>
+        <button class="btn" onclick="openOrdonnanceEdit(${o.IDR})">Modifier</button>
+        <button class="btn danger" onclick="deleteOrdonnance(${o.IDR})">Supprimer</button>
+      </td>
+    </tr>`;
+  });
 
-    function openOrdonnanceModal(data=null){
-      const isEdit = !!data;
-      const o = data || { IDR:null, IDC:null, IDP:null, Medicament1:'',Posologie1:'',Duree1:'',Medicament2:'',Posologie2:'',Duree2:'',Medicament3:'',Posologie3:'',Duree3:'',Remarques:'' };
-      const root = $('modalRoot'); root.style.display='block';
-      root.innerHTML = `
-        <div class="modal-backdrop">
-          <div class="modal">
-            <h3>${isEdit? 'Modifier Ordonnance' : 'Nouvelle Ordonnance'}</h3>
-            <div class="form-row"><div class="form-col"><label>Consultation (IDC)</label><input id="o_IDC" type="text" value="${escapeHtml(o.IDC||'')}" /></div><div class="form-col"><label>Patient (IDP)</label><input id="o_IDP" type="text" value="${escapeHtml(o.IDP||'')}" /></div></div>
-            <div style="margin-top:8px"><strong>Médicament 1</strong></div>
-            <div class="form-row"><div class="form-col"><input id="o_Med1" type="text" placeholder="Médicament" value="${escapeHtml(o.Medicament1||'')}" /></div><div class="form-col"><input id="o_Pos1" type="text" placeholder="Posologie" value="${escapeHtml(o.Posologie1||'')}" /></div><div class="form-col"><input id="o_Dur1" type="text" placeholder="Durée" value="${escapeHtml(o.Duree1||'')}" /></div></div>
+  // Wait for all promises to resolve and render the table
+  Promise.all(renderPromises).then(rows => {
+    tbody.innerHTML = rows.join('');
+  });
+}
 
-            <div style="margin-top:8px"><strong>Médicament 2</strong></div>
-            <div class="form-row"><div class="form-col"><input id="o_Med2" type="text" value="${escapeHtml(o.Medicament2||'')}" /></div><div class="form-col"><input id="o_Pos2" type="text" value="${escapeHtml(o.Posologie2||'')}" /></div><div class="form-col"><input id="o_Dur2" type="text" value="${escapeHtml(o.Duree2||'')}" /></div></div>
+   function openOrdonnanceModal(data = null){
+  const isEdit = !!data;
+  const user = window.electronAPI.getCurrentUser ? window.electronAPI.getCurrentUser() : { Nom: '', Prenom: '' };
+  const doctorName = `${user.Nom || ''} ${user.Prenom || ''}`.trim() || 'Dr. Non spécifié';
+  
+  const o = data || { 
+    IDR: null, 
+    patientCIN: '', 
+    medecinName: doctorName,
+    M1: '', P1: '', D1: '',
+    M2: '', P2: '', D2: '',
+    M3: '', P3: '', D3: '',
+    Remarques: '' 
+  };
 
-            <div style="margin-top:8px"><strong>Médicament 3</strong></div>
-            <div class="form-row"><div class="form-col"><input id="o_Med3" type="text" value="${escapeHtml(o.Medicament3||'')}" /></div><div class="form-col"><input id="o_Pos3" type="text" value="${escapeHtml(o.Posologie3||'')}" /></div><div class="form-col"><input id="o_Dur3" type="text" value="${escapeHtml(o.Duree3||'')}" /></div></div>
-
-            <div class="form-row"><div class="form-col"><label>Remarques</label><textarea id="o_Rem">${escapeHtml(o.Remarques||'')}</textarea></div></div>
-
-            <div class="actions">
-              ${isEdit? '<button id="delOrdoBtn" class="btn danger">Supprimer</button>':''}
-              <button id="cancelOrdo" class="btn">Annuler</button>
-              <button id="saveOrdo" class="btn primary">${isEdit? 'Sauvegarder' : 'Enregistrer'}</button>
-            </div>
+  const root = $('modalRoot'); 
+  root.style.display = 'block';
+  root.innerHTML = `
+    <div class="modal-backdrop">
+      <div class="modal" style="max-width: 800px;">
+        <h3>${isEdit ? 'Modifier Ordonnance' : 'Nouvelle Ordonnance'}</h3>
+        
+        <div class="form-row">
+          <div class="form-col">
+            <label>CIN du Patient *</label>
+            <input id="o_CIN" type="text" value="${escapeHtml(o.patientCIN || '')}" 
+                   placeholder="Saisir le CIN du patient" 
+                   ${isEdit ? 'readonly' : ''} />
+            <div class="small muted" id="patientInfo" style="margin-top: 4px;"></div>
+          </div>
+          <div class="form-col">
+            <label>Médecin prescripteur *</label>
+            <input id="o_Medecin" type="text" value="${escapeHtml(o.medecinName || doctorName)}" />
           </div>
         </div>
-      `;
-      root.querySelector('#cancelOrdo').onclick = closeModal;
-      root.querySelector('#saveOrdo').onclick = async () => {
-        const payload = {
-          IDR: o.IDR || undefined,
-          IDC: parseInt(document.getElementById('o_IDC').value) || null,
-          IDP: parseInt(document.getElementById('o_IDP').value) || null,
-          Medicament1: document.getElementById('o_Med1').value.trim(),
-          Posologie1: document.getElementById('o_Pos1').value.trim(),
-          Duree1: document.getElementById('o_Dur1').value.trim(),
-          Medicament2: document.getElementById('o_Med2').value.trim(),
-          Posologie2: document.getElementById('o_Pos2').value.trim(),
-          Duree2: document.getElementById('o_Dur2').value.trim(),
-          Medicament3: document.getElementById('o_Med3').value.trim(),
-          Posologie3: document.getElementById('o_Pos3').value.trim(),
-          Duree3: document.getElementById('o_Dur3').value.trim(),
-          Remarques: document.getElementById('o_Rem').value.trim()
-        };
-        try{
-          if(isEdit) await window.electronAPI.updateOrdonnance(payload);
-          else await window.electronAPI.addOrdonnance(payload);
-          alert('Ordonnance sauvegardée.');
-          closeModal();
-          ordonnancesCache = await window.electronAPI.getOrdonnances();
-          renderOrdonnancesTable();
-        }catch(e){ console.error(e); alert('Erreur ordonnance'); }
-      };
-      if(isEdit){
-        root.querySelector('#delOrdoBtn').onclick = async () => {
-          if(!confirm('Supprimer ordonnance ?')) return;
-          await window.electronAPI.deleteOrdonnance(Number(o.IDR));
-          ordonnancesCache = await window.electronAPI.getOrdonnances();
-          renderOrdonnancesTable();
-          closeModal();
-        };
+
+        <div style="margin: 20px 0; padding: 12px; background: #f8fafc; border-radius: 6px;">
+          <strong style="color: var(--accent);">Médicament 1</strong>
+          <div class="form-row" style="margin-top: 8px;">
+            <div class="form-col"><input id="o_Med1" type="text" placeholder="Nom du médicament" value="${escapeHtml(o.M1 || '')}" /></div>
+            <div class="form-col"><input id="o_Pos1" type="text" placeholder="Posologie" value="${escapeHtml(o.P1 || '')}" /></div>
+            <div class="form-col"><input id="o_Dur1" type="text" placeholder="Durée du traitement" value="${escapeHtml(o.D1 || '')}" /></div>
+          </div>
+        </div>
+
+        <div style="margin: 20px 0; padding: 12px; background: #f8fafc; border-radius: 6px;">
+          <strong style="color: var(--accent);">Médicament 2</strong>
+          <div class="form-row" style="margin-top: 8px;">
+            <div class="form-col"><input id="o_Med2" type="text" value="${escapeHtml(o.M2 || '')}" /></div>
+            <div class="form-col"><input id="o_Pos2" type="text" value="${escapeHtml(o.P2 || '')}" /></div>
+            <div class="form-col"><input id="o_Dur2" type="text" value="${escapeHtml(o.D2 || '')}" /></div>
+          </div>
+        </div>
+
+        <div style="margin: 20px 0; padding: 12px; background: #f8fafc; border-radius: 6px;">
+          <strong style="color: var(--accent);">Médicament 3</strong>
+          <div class="form-row" style="margin-top: 8px;">
+            <div class="form-col"><input id="o_Med3" type="text" value="${escapeHtml(o.M3 || '')}" /></div>
+            <div class="form-col"><input id="o_Pos3" type="text" value="${escapeHtml(o.P3 || '')}" /></div>
+            <div class="form-col"><input id="o_Dur3" type="text" value="${escapeHtml(o.D3 || '')}" /></div>
+          </div>
+        </div>
+
+        <div class="form-row">
+          <div class="form-col">
+            <label>Remarques et instructions</label>
+            <textarea id="o_Rem" placeholder="Instructions supplémentaires..." style="min-height: 80px;">${escapeHtml(o.Remarques || '')}</textarea>
+          </div>
+        </div>
+
+        <div class="actions">
+          ${isEdit ? '<button id="delOrdoBtn" class="btn danger">Supprimer</button>' : ''}
+          <button id="cancelOrdo" class="btn">Annuler</button>
+          <button id="saveOrdo" class="btn primary">${isEdit ? 'Sauvegarder' : 'Enregistrer l\'ordonnance'}</button>
+        </div>
+      </div>
+    </div>
+  `;
+
+  // Add real-time CIN validation
+  const cinInput = root.querySelector('#o_CIN');
+  const patientInfo = root.querySelector('#patientInfo');
+  
+  if (!isEdit) {
+    cinInput.addEventListener('input', async () => {
+      const cin = cinInput.value.trim();
+      if (cin.length > 3) {
+        try {
+          const patient = await window.electronAPI.getPatientByCIN(cin);
+          if (patient) {
+            patientInfo.innerHTML = `<span style="color: var(--success);">✓ Patient trouvé: ${escapeHtml(patient.Nom)} ${escapeHtml(patient.Prenom)}</span>`;
+          } else {
+            patientInfo.innerHTML = `<span style="color: var(--warning);">⚠ Patient non trouvé - une nouvelle consultation sera créée</span>`;
+          }
+        } catch (error) {
+          patientInfo.innerHTML = `<span style="color: var(--danger);">Erreur de recherche</span>`;
+        }
+      } else {
+        patientInfo.innerHTML = '';
       }
+    });
+  } else {
+    // For edit mode, show patient info immediately
+    if (o.patientCIN) {
+      window.electronAPI.getPatientByCIN(o.patientCIN).then(patient => {
+        if (patient) {
+          patientInfo.innerHTML = `<span style="color: var(--success);">Patient: ${escapeHtml(patient.Nom)} ${escapeHtml(patient.Prenom)}</span>`;
+        }
+      });
+    }
+  }
+
+  root.querySelector('#cancelOrdo').onclick = closeModal;
+  
+  root.querySelector('#saveOrdo').onclick = async () => {
+    const cin = document.getElementById('o_CIN').value.trim();
+    const medecinName = document.getElementById('o_Medecin').value.trim();
+    
+    if (!cin) {
+      alert('Veuillez saisir le CIN du patient');
+      return;
+    }
+    
+    if (!medecinName) {
+      alert('Veuillez saisir le nom du médecin prescripteur');
+      return;
     }
 
-    window.openOrdonnanceDetails = async function(IDR){
-      const o = (await window.electronAPI.getOrdonnanceById(Number(IDR))) || null;
-      if(!o) return alert('Introuvable');
-      const p = patientsCache.find(x=>x.IDP===o.IDP) || {};
-      const root = $('modalRoot'); root.style.display='block';
-      root.innerHTML = `
-        <div class="modal-backdrop">
-          <div class="modal">
-            <h3>Ordonnance #${o.IDR}</h3>
-            <p><strong>Patient:</strong> ${escapeHtml(p.Nom||'')} ${escapeHtml(p.Prenom||'')}</p>
-            <p><strong>Médicaments:</strong></p>
-            <ul>
-              ${o.Medicament1?`<li>${escapeHtml(o.Medicament1)} — ${escapeHtml(o.Posologie1)} — ${escapeHtml(o.Duree1)}</li>`:''}
-              ${o.Medicament2?`<li>${escapeHtml(o.Medicament2)} — ${escapeHtml(o.Posologie2)} — ${escapeHtml(o.Duree2)}</li>`:''}
-              ${o.Medicament3?`<li>${escapeHtml(o.Medicament3)} — ${escapeHtml(o.Posologie3)} — ${escapeHtml(o.Duree3)}</li>`:''}
-            </ul>
-            <p><strong>Remarques:</strong> ${escapeHtml(o.Remarques)}</p>
-            <div class="actions">
-              <button id="closeOrdo" class="btn">Fermer</button>
-              <button id="exportOrdoPdf" class="btn primary">Exporter PDF</button>
-            </div>
-          </div>
-        </div>
-      `;
-      root.querySelector('#closeOrdo').onclick = closeModal;
-      root.querySelector('#exportOrdoPdf').onclick = () => {
-        const { jsPDF } = window.jspdf;
-        const doc = new jsPDF();
-        let y=10;
-        doc.text(`Ordonnance #${o.IDR}`, 10, y); y+=10;
-        doc.text(`Patient: ${p.Nom||''} ${p.Prenom||''}`, 10, y); y+=8;
-        if(o.Medicament1) { doc.text(`${o.Medicament1} - ${o.Posologie1} - ${o.Duree1}`, 10, y); y+=8; }
-        if(o.Medicament2) { doc.text(`${o.Medicament2} - ${o.Posologie2} - ${o.Duree2}`, 10, y); y+=8; }
-        if(o.Medicament3) { doc.text(`${o.Medicament3} - ${o.Posologie3} - ${o.Duree3}`, 10, y); y+=8; }
-        doc.save(`ordonnance_${o.IDR}.pdf`);
-      };
+    const payload = {
+      IDR: o.IDR || undefined,
+      patientCIN: cin,
+      medecinName: medecinName,
+      M1: document.getElementById('o_Med1').value.trim(),
+      P1: document.getElementById('o_Pos1').value.trim(),
+      D1: document.getElementById('o_Dur1').value.trim(),
+      M2: document.getElementById('o_Med2').value.trim(),
+      P2: document.getElementById('o_Pos2').value.trim(),
+      D2: document.getElementById('o_Dur2').value.trim(),
+      M3: document.getElementById('o_Med3').value.trim(),
+      P3: document.getElementById('o_Pos3').value.trim(),
+      D3: document.getElementById('o_Dur3').value.trim(),
+      Remarques: document.getElementById('o_Rem').value.trim()
     };
 
-    window.openOrdonnanceEdit = async function(IDR){
-      const o = await window.electronAPI.getOrdonnanceById(Number(IDR));
-      openOrdonnanceModal(o);
+    try {
+      if (isEdit) {
+        await window.electronAPI.updateOrdonnanceByCIN(payload);
+        alert('Ordonnance modifiée avec succès.');
+      } else {
+        const result = await window.electronAPI.addOrdonnanceByCIN(payload);
+        alert(`Ordonnance créée avec succès (ID: ${result.IDR})`);
+      }
+      closeModal();
+      ordonnancesCache = await window.electronAPI.getOrdonnances();
+      renderOrdonnancesTable();
+    } catch (error) {
+      console.error('Erreur ordonnance:', error);
+      alert('Erreur: ' + (error.message || 'Impossible de sauvegarder l\'ordonnance'));
+    }
+  };
+
+  if (isEdit) {
+    root.querySelector('#delOrdoBtn').onclick = async () => {
+      if (!confirm('Supprimer cette ordonnance ?')) return;
+      try {
+        await window.electronAPI.deleteOrdonnance(Number(o.IDR));
+        ordonnancesCache = await window.electronAPI.getOrdonnances();
+        renderOrdonnancesTable();
+        closeModal();
+        alert('Ordonnance supprimée');
+      } catch (error) {
+        console.error(error);
+        alert('Erreur lors de la suppression');
+      }
     };
+  }
+}
+   window.openOrdonnanceDetails = async function(IDR){
+  const o = (await window.electronAPI.getOrdonnanceById(Number(IDR))) || null;
+  if(!o) return alert('Ordonnance introuvable');
+  
+  const p = patientsCache.find(x=>x.IDP===o.IDP) || {};
+  const c = consultationsCache.find(x=>x.IDC===o.IDC) || {};
+  
+  const root = $('modalRoot'); 
+  root.style.display='block';
+  root.innerHTML = `
+    <div class="modal-backdrop">
+      <div class="modal">
+        <h3>Ordonnance #${o.IDR}</h3>
+        
+        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 16px; margin-bottom: 20px;">
+          <div>
+            <p><strong>Patient:</strong> ${escapeHtml(p.Nom||'')} ${escapeHtml(p.Prenom||'')}</p>
+            <p><strong>CIN:</strong> ${escapeHtml(p.CIN||'')}</p>
+            <p><strong>Médecin:</strong> ${escapeHtml(c.NomMedecin||'Non spécifié')}</p>
+          </div>
+          <div>
+            <p><strong>Date consultation:</strong> ${escapeHtml(c.DateCreation ? new Date(c.DateCreation).toLocaleDateString() : 'N/A')}</p>
+            <p><strong>N° Consultation:</strong> ${o.IDC || 'N/A'}</p>
+          </div>
+        </div>
+
+        <div style="margin: 16px 0;">
+          <strong style="color: var(--accent); font-size: 16px;">Médicaments prescrits:</strong>
+          <div style="margin-top: 12px;">
+            ${o.Medicament1 ? `
+              <div style="padding: 12px; background: #f8fafc; border-radius: 6px; margin-bottom: 8px;">
+                <strong>${escapeHtml(o.Medicament1)}</strong><br>
+                <span class="small">Posologie: ${escapeHtml(o.Posologie1)} - Durée: ${escapeHtml(o.Duree1)}</span>
+              </div>
+            ` : ''}
+            ${o.Medicament2 ? `
+              <div style="padding: 12px; background: #f8fafc; border-radius: 6px; margin-bottom: 8px;">
+                <strong>${escapeHtml(o.Medicament2)}</strong><br>
+                <span class="small">Posologie: ${escapeHtml(o.Posologie2)} - Durée: ${escapeHtml(o.Duree2)}</span>
+              </div>
+            ` : ''}
+            ${o.Medicament3 ? `
+              <div style="padding: 12px; background: #f8fafc; border-radius: 6px; margin-bottom: 8px;">
+                <strong>${escapeHtml(o.Medicament3)}</strong><br>
+                <span class="small">Posologie: ${escapeHtml(o.Posologie3)} - Durée: ${escapeHtml(o.Duree3)}</span>
+              </div>
+            ` : ''}
+          </div>
+        </div>
+
+        ${o.Remarques ? `
+          <div style="margin: 16px 0;">
+            <strong>Remarques:</strong>
+            <div style="padding: 12px; background: #f0f9ff; border-radius: 6px; margin-top: 8px;">
+              ${escapeHtml(o.Remarques)}
+            </div>
+          </div>
+        ` : ''}
+
+        <div class="actions">
+          <button id="closeOrdo" class="btn">Fermer</button>
+          <button id="exportOrdoPdf" class="btn primary">Exporter PDF</button>
+        </div>
+      </div>
+    </div>
+  `;
+  
+  root.querySelector('#closeOrdo').onclick = closeModal;
+  root.querySelector('#exportOrdoPdf').onclick = () => {
+    const { jsPDF } = window.jspdf;
+    const doc = new jsPDF();
+    let y = 10;
+    
+    // Header
+    doc.setFontSize(16);
+    doc.text('ORDONNANCE MÉDICALE', 105, y, { align: 'center' });
+    y += 15;
+    
+    doc.setFontSize(10);
+    doc.text(`N°: ${o.IDR}`, 20, y);
+    doc.text(`Date: ${new Date().toLocaleDateString()}`, 150, y);
+    y += 10;
+    
+    // Patient info
+    doc.text(`Patient: ${p.Nom || ''} ${p.Prenom || ''}`, 20, y);
+    y += 6;
+    doc.text(`CIN: ${p.CIN || ''}`, 20, y);
+    y += 6;
+    doc.text(`Médecin: ${c.NomMedecin || ''}`, 20, y);
+    y += 15;
+    
+    // Medications
+    doc.setFontSize(12);
+    doc.text('MÉDICAMENTS PRESCRITS:', 20, y);
+    y += 10;
+    
+    doc.setFontSize(10);
+    [1, 2, 3].forEach(i => {
+      const med = o[`Medicament${i}`];
+      const pos = o[`Posologie${i}`];
+      const dur = o[`Duree${i}`];
+      if (med) {
+        doc.text(`• ${med} - ${pos} - ${dur}`, 25, y);
+        y += 6;
+      }
+    });
+    
+    y += 10;
+    if (o.Remarques) {
+      doc.text('Remarques:', 20, y);
+      y += 6;
+      const remarks = doc.splitTextToSize(o.Remarques, 170);
+      remarks.forEach(line => {
+        doc.text(line, 25, y);
+        y += 6;
+      });
+    }
+    
+    // Footer
+    y += 15;
+    doc.text('Signature et cachet du médecin:', 20, y);
+    y += 20;
+    doc.line(20, y, 80, y);
+    
+    doc.save(`ordonnance_${o.IDR}_${p.CIN || 'patient'}.pdf`);
+  };
+};
+
+   window.openOrdonnanceEdit = async function(IDR){
+  const o = await window.electronAPI.getOrdonnanceById(Number(IDR));
+  if (!o) {
+    alert('Ordonnance introuvable');
+    return;
+  }
+  
+  // Get patient CIN for the edit form
+  const p = patientsCache.find(x => x.IDP === o.IDP) || {};
+  
+  const ordonnanceData = {
+    IDR: o.IDR,
+    patientCIN: p.CIN || '',
+    medecinName: '', // Will be filled from consultation
+    M1: o.Medicament1 || '',
+    P1: o.Posologie1 || '',
+    D1: o.Duree1 || '',
+    M2: o.Medicament2 || '',
+    P2: o.Posologie2 || '',
+    D2: o.Duree2 || '',
+    M3: o.Medicament3 || '',
+    P3: o.Posologie3 || '',
+    D3: o.Duree3 || '',
+    Remarques: o.Remarques || ''
+  };
+  
+  // Try to get doctor name from consultation
+  const c = consultationsCache.find(x => x.IDC === o.IDC);
+  if (c && c.NomMedecin) {
+    ordonnanceData.medecinName = c.NomMedecin;
+  }
+  
+  openOrdonnanceModal(ordonnanceData);
+};
 
     async function deleteOrdonnance(IDR){
       if(!confirm('Supprimer ordonnance ?')) return;

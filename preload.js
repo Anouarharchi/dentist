@@ -36,9 +36,20 @@ getPatientForDoc: (idp) => ipcRenderer.invoke('get-patient-for-doc', idp),
   getConsultationById: (id) => ipcRenderer.invoke('get-consultation-by-id', id),
   getConsultations: () => ipcRenderer.invoke('get-consultations'),
   getConsultationFile: (fileName) => ipcRenderer.invoke('get-consultation-file', fileName),  // ---------------------------
-  // Ordonnance
-  // ---------------------------
-  addOrdonnance: (o) => ipcRenderer.invoke('add-ordonnance', o),
+  // New CIN-based ordonnance functions
+  addOrdonnanceByCIN: (data) => ipcRenderer.invoke('add-ordonnance-by-cin', data),
+  updateOrdonnanceByCIN: (data) => ipcRenderer.invoke('update-ordonnance-by-cin', data),
+  getOrdonnancesByPatientCIN: (cin) => ipcRenderer.invoke('get-ordonnances-by-patient-cin', cin),
+  getPatientLatestConsultation: (cin) => ipcRenderer.invoke('get-patient-latest-consultation', cin),
+  getOrCreateCurrentConsultation: (cin, medecinName) => ipcRenderer.invoke('get-or-create-current-consultation', { cin, medecinName }),
+  
+  // Existing functions (make sure they're there)
+  getPatientByCIN: (cin) => ipcRenderer.invoke('get-patient-by-cin', cin),
+  getOrdonnances: () => ipcRenderer.invoke('get-ordonnances'),
+  getOrdonnanceById: (id) => ipcRenderer.invoke('get-ordonnance-by-id', id),
+  updateOrdonnance: (data) => ipcRenderer.invoke('update-ordonnance', data),
+  deleteOrdonnance: (id) => ipcRenderer.invoke('delete-ordonnance', id),
+
   // Appointments advanced
   getAppointments: ({ startDate, endDate }) => ipcRenderer.invoke('get-appointments', { startDate, endDate }),
   getAppointment: (IDRv) => ipcRenderer.invoke('get-appointment', IDRv),
@@ -72,6 +83,7 @@ getPatientForDoc: (idp) => ipcRenderer.invoke('get-patient-for-doc', idp),
   // Photos
   // ---------------------------
   savePhoto: ({ file, CIN }) => ipcRenderer.invoke('save-photo', { file, CIN }),
+  getSuiviDocs: () => ipcRenderer.invoke('get-suivi-docs'),
 
   // ---------------------------
   // Historique / Logging
