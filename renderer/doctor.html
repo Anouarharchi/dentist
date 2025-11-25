@@ -559,6 +559,58 @@
       margin-top: 8px;
     }
 
+    /* New styles for medication form */
+    .medication-section {
+      margin: 20px 0;
+      padding: 16px;
+      background: #f8fafc;
+      border-radius: 6px;
+      border: 1px solid var(--border);
+    }
+    
+    .medication-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 12px;
+    }
+    
+    .medication-fields {
+      display: grid;
+      grid-template-columns: 1fr 1fr 1fr auto;
+      gap: 10px;
+      align-items: end;
+    }
+    
+    .add-medication-btn {
+      background: var(--success);
+      color: white;
+      border: none;
+      border-radius: 50%;
+      width: 36px;
+      height: 36px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      cursor: pointer;
+      font-size: 18px;
+      margin-left: 10px;
+    }
+    
+    .remove-medication-btn {
+      background: var(--danger);
+      color: white;
+      border: none;
+      border-radius: 4px;
+      width: 36px;
+      height: 36px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      cursor: pointer;
+      font-size: 14px;
+    }
+
     @media (max-width: 900px) {
       .right-panel {
         display: none;
@@ -596,6 +648,11 @@
       .logout-btn {
         padding: 14px;
         justify-content: center;
+      }
+      
+      .medication-fields {
+        grid-template-columns: 1fr;
+        gap: 8px;
       }
     }
 
@@ -673,7 +730,7 @@
           <span class="label">
             <span class="icon">
               <svg width="18" height="18" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-                <path d="M19.14 12.94C19.18 12.64 19.2 12.33 19.2 12C19.2 11.67 19.18 11.36 19.14 11.06L21.16 9.44C21.34 9.3 21.38 9.04 21.26 8.84L19.36 5.8C19.24 5.6 19 5.54 18.8 5.62L16.5 6.68C16.06 6.38 15.58 6.12 15.08 5.92L14.8 3.46C14.78 3.24 14.6 3.06 14.38 3.06H9.62C9.4 3.06 9.22 3.24 9.2 3.46L8.92 5.92C8.42 6.12 7.94 6.38 7.5 6.68L5.2 5.62C5 5.54 4.76 5.6 4.64 5.8L2.74 8.84C2.62 9.04 2.66 9.3 2.84 9.44L4.86 11.06C4.82 11.36 4.8 11.67 4.8 12C4.8 12.33 4.82 12.64 4.86 12.94L2.84 14.56C2.66 14.7 2.62 14.96 2.74 15.16L4.64 18.2C4.76 18.4 5 18.46 5.2 18.38L7.5 17.32C7.94 17.62 8.42 17.88 8.92 18.08L9.2 20.54C9.22 20.76 9.4 20.94 9.62 20.94H14.38C14.6 20.94 14.78 20.76 14.8 20.54L15.08 18.08C15.58 17.88 16.06 17.62 16.5 17.32L18.8 18.38C19 18.46 19.24 18.4 19.36 18.2L21.26 15.16C21.38 14.96 21.34 14.7 21.16 14.56L19.14 12.94ZM12 15.6C10.14 15.6 8.62 14.08 8.62 12.22C8.62 10.36 10.14 8.84 12 8.84C13.86 8.84 15.38 10.36 15.38 12.22C15.38 14.08 13.86 15.6 12 15.6Z" fill="currentColor"/>
+                <path d="M19.14 12.94C19.18 12.64 19.2 12.33 19.2 12C19.2 11.67 19.18 11.36 19.14 11.06L21.16 9.44C21.34 9.3 21.38 9.04 21.26 9.84L19.36 5.8C19.24 5.6 19 5.54 18.8 5.62L16.5 6.68C16.06 6.38 15.58 6.12 15.08 5.92L14.8 3.46C14.78 3.24 14.6 3.06 14.38 3.06H9.62C9.4 3.06 9.22 3.24 9.2 3.46L8.92 5.92C8.42 6.12 7.94 6.38 7.5 6.68L5.2 5.62C5 5.54 4.76 5.6 4.64 5.8L2.74 8.84C2.62 9.04 2.66 9.3 2.84 9.44L4.86 11.06C4.82 11.36 4.8 11.67 4.8 12C4.8 12.33 4.82 12.64 4.86 12.94L2.84 14.56C2.66 14.7 2.62 14.96 2.74 15.16L4.64 18.2C4.76 18.4 5 18.46 5.2 18.38L7.5 17.32C7.94 17.62 8.42 17.88 8.92 18.08L9.2 20.54C9.22 20.76 9.4 20.94 9.62 20.94H14.38C14.6 20.94 14.78 20.76 14.8 20.54L15.08 18.08C15.58 17.88 16.06 17.62 16.5 17.32L18.8 18.38C19 18.46 19.24 18.4 19.36 18.2L21.26 15.16C21.38 14.96 21.34 14.7 21.16 14.56L19.14 12.94ZM12 15.6C10.14 15.6 8.62 14.08 8.62 12.22C8.62 10.36 10.14 8.84 12 8.84C13.86 8.84 15.38 10.36 15.38 12.22C15.38 14.08 13.86 15.6 12 15.6Z" fill="currentColor"/>
               </svg>
             </span>
             <span class="text">Paramètres</span>
@@ -755,19 +812,99 @@
   <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
 
   <script>
-    // The JavaScript code remains exactly the same as in the original
-    // Only the CSS and HTML structure have been modified for the new design
-    
     /**************************************************************************
-     * Dentist frontend logic
-     * - uses window.electronAPI.* to interact with main process
-     * - assumes current user has Droit === 'doctor'
+     * Dentist frontend logic with Consultation Reference System
      **************************************************************************/
 
     // small helpers
     const $ = id => document.getElementById(id);
     const escapeHtml = s => { if(s===null||s===undefined) return ''; return String(s).replace(/[&<>"']/g, c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c])); };
     const todayISO = () => new Date().toISOString().split('T')[0];
+
+    // Function to generate a random 5-digit reference
+    function generateConsultationRef() {
+      return Math.floor(10000 + Math.random() * 90000).toString();
+    }
+
+    // Function to copy consultation reference to clipboard
+    function copyConsultationRef(ref) {
+      if (!ref || ref === 'N/A') {
+        alert('Aucune référence disponible');
+        return;
+      }
+      
+      navigator.clipboard.writeText(ref).then(() => {
+        alert(`Référence "${ref}" copiée dans le presse-papier`);
+      }).catch(err => {
+        console.error('Erreur copie presse-papier:', err);
+        // Fallback for older browsers
+        const textArea = document.createElement('textarea');
+        textArea.value = ref;
+        document.body.appendChild(textArea);
+        textArea.select();
+        document.execCommand('copy');
+        document.body.removeChild(textArea);
+        alert(`Référence "${ref}" copiée dans le presse-papier`);
+      });
+    }
+
+    // Function to open consultation selector
+    function openConsultationSelector() {
+      const root = $('modalRoot');
+      const selectorModal = document.createElement('div');
+      selectorModal.innerHTML = `
+        <div class="modal-backdrop">
+          <div class="modal" style="max-width: 700px;">
+            <h3>Sélectionner une Consultation</h3>
+            <div style="max-height: 400px; overflow-y: auto;">
+              <table class="table">
+                <thead>
+                  <tr>
+                    <th>Référence</th>
+                    <th>Patient</th>
+                    <th>Motif</th>
+                    <th>Date</th>
+                    <th>Action</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  ${consultationsCache.map(c => {
+                    const p = patientsCache.find(x => x.IDP === c.IDP) || {};
+                    return `
+                      <tr>
+                        <td><strong>${escapeHtml(c.consultation_ref || 'N/A')}</strong></td>
+                        <td>${escapeHtml(p.Nom || '')} ${escapeHtml(p.Prenom || '')}</td>
+                        <td>${escapeHtml(c.Motif || '')}</td>
+                        <td>${escapeHtml(c.DateCreation ? new Date(c.DateCreation).toLocaleDateString() : 'N/A')}</td>
+                        <td>
+                          <button class="btn primary" onclick="selectConsultation('${c.consultation_ref || ''}')">
+                            Sélectionner
+                          </button>
+                        </td>
+                      </tr>
+                    `;
+                  }).join('')}
+                </tbody>
+              </table>
+            </div>
+            <div class="actions">
+              <button class="btn" onclick="closeModal()">Fermer</button>
+            </div>
+          </div>
+        </div>
+      `;
+      
+      root.appendChild(selectorModal);
+    }
+
+    // Function to select consultation and fill the reference
+    function selectConsultation(ref) {
+      const refInput = document.getElementById('o_ConsultRef');
+      if (refInput) {
+        refInput.value = ref;
+      }
+      closeModal();
+    }
 
     // Keep caches
     let patientsCache = [];
@@ -892,58 +1029,57 @@
         const p = patientsCache.find(x=>x.IDP===a.IDP) || {};
         const apptEl = document.createElement('div');
         apptEl.className = 'appt-card';
-        apptEl.innerHTML = `
-          <div class="appt-time">${escapeHtml(a.HeureRv||'--:--')}</div>
-          <div class="appt-meta">
-            <div class="patient-name">${escapeHtml(a.NomPrenom || (p.Nom? (p.Nom+' '+(p.Prenom||'')) : 'Patient'))}</div>
-            <div class="patient-details">
-              <div class="small muted">${escapeHtml(p.CIN||a.CIN||'')}</div>
-              <div class="small">${escapeHtml(p.Tel||a.Email||'')}</div>
-              <div style="margin-left:auto"><span class="pill">${escapeHtml(a.Statut||'Planifié')}</span></div>
-            </div>
-            <div class="small muted" style="margin-top:8px">${escapeHtml(a.TypePatient||'--')}</div>
-          </div>
-          <div class="appt-actions">
-            <button class="btn" onclick="openPatientDetailsFromAppt(${a.IDP ?? 'null'})">Patient</button>
-            <button class="btn primary" onclick="openApptEdit(${a.IDRv})">Ouvrir</button>
-          </div>
-        `;
+    apptEl.innerHTML = `
+  <div class="appt-time">${escapeHtml(a.HeureRv||'--:--')}</div>
+  <div class="appt-meta">
+    <div class="patient-name">${escapeHtml(a.NomPrenom || (p && p.Nom ? (p.Nom+' '+(p.Prenom||'')) : 'Patient'))}</div>
+    <div class="patient-details">
+      <div class="small muted">${escapeHtml((p && p.CIN) || a.CIN || '')}</div>
+      <div class="small">${escapeHtml((p && p.Tel) || a.Email || '')}</div>
+      <div style="margin-left:auto"><span class="pill">${escapeHtml(a.Statut||'Planifié')}</span></div>
+    </div>
+    <div class="small muted" style="margin-top:8px">${escapeHtml(a.TypePatient||'--')}</div>
+  </div>
+  <div class="appt-actions">
+    <!-- Only show patient button if we have a valid IDP -->
+    ${a.IDP ? `<button class="btn" onclick="openPatientDetailsFromAppt(${a.IDP})">Patient</button>` : ''}
+    <button class="btn primary" onclick="openApptEdit(${a.IDRv})">Ouvrir</button>
+  </div>
+`;
         listDiv.appendChild(apptEl);
       });
     }
+window.openPatientDetailsFromAppt = async function(idp) {
+  try {
+    console.log('Opening patient details for ID:', idp);
+    
+    if (idp === undefined || idp === null || idp === 'null') {
+      alert('Patient introuvable (no id provided)');
+      return;
+    }
 
-    window.openPatientDetailsFromAppt = async function(idp){
-      try {
-        // التعامل مع قيم قد تأتي كـ 'null' أو null أو undefined أو string
-        if (idp === undefined || idp === null || idp === 'null') {
-          alert('Patient introuvable (no id provided)');
-          return;
-        }
+    const numId = Number(idp);
+    if (Number.isNaN(numId)) {
+      alert('Patient introuvable (invalid id)');
+      return;
+    }
 
-        // Convert to number safely
-        const numId = Number(idp);
-        if (Number.isNaN(numId)) {
-          alert('Patient introuvable (invalid id)');
-          return;
-        }
+    // FIX: Use the correct function that exists in your db.js
+    const p = await window.electronAPI.getPatientForDoc(numId);
 
-        // Use the new API that queries DB directly for a single patient
-        const p = await window.electronAPI.getPatientForDoc(numId);
+    if (!p) {
+      alert('Patient introuvable');
+      return;
+    }
 
-        if (!p) {
-          alert('Patient introuvable');
-          return;
-        }
+    console.log('Found patient:', p);
+    openPatientDetailsModal(p);
 
-        // openPatientDetailsModal موجود عندك — يبقى كما هو
-        openPatientDetailsModal(p);
-
-      } catch (err) {
-        console.error('Error opening patient details:', err);
-        alert('Erreur lors de l\'ouverture du patient. Regarde la console.');
-      }
-    };
-
+  } catch (err) {
+    console.error('Error opening patient details:', err);
+    alert('Erreur lors de l\'ouverture du patient. Regarde la console.');
+  }
+};
     window.openApptEdit = async function(idrv){
       try{
         const appt = await window.electronAPI.getAppointment(Number(idrv));
@@ -957,112 +1093,191 @@
       openApptModal({ IDRv:null, IDP:null, DateRv: todayISO(), HeureRv: '09:00', Statut: 'Planifié', TypePatient:'Consultation', NomPrenom:'', Email:''});
     }
 
-    function openApptModal(appt){
-      const root = $('modalRoot');
-      root.style.display = 'block';
-      root.innerHTML = `
-        <div class="modal-backdrop">
-          <div class="modal" role="dialog" aria-modal="true">
-            <h3>${appt.IDRv? 'Modifier RDV':'Créer RDV'}</h3>
+   function openApptModal(appt){
+  const root = $('modalRoot');
+  root.style.display = 'block';
+  root.innerHTML = `
+    <div class="modal-backdrop">
+      <div class="modal" role="dialog" aria-modal="true">
+        <h3>${appt.IDRv? 'Modifier RDV':'Créer RDV'}</h3>
 
-            <div class="form-row">
-              <div class="form-col">
-                <label>Date</label>
-                <input type="date" id="m_DateRv" value="${escapeHtml(appt.DateRv||'')}" />
-              </div>
-              <div class="form-col">
-                <label>CIN</label>
-                <input type="text" id="CIN" value="${escapeHtml(appt.CIN||'')}" />
-              </div>
-              <div class="form-col">
-                <label>Heure</label>
-                <input type="time" id="m_HeureRv" value="${escapeHtml(appt.HeureRv||'')}" />
-              </div>
-            </div>
-
-            <div class="form-row">
-              <div class="form-col">
-                <label>Patient (ID ou Nom)</label>
-                <input type="text" id="m_Patient" placeholder="Saisir IDP ou Nom complet" value="${escapeHtml(appt.NomPrenom||'')}" />
-                <div class="small muted">Tu peux saisir l'IDP ou le nom complet; laisser vide pour patient inconnu.</div>
-              </div>
-              <div class="form-col">
-                <label>Email</label>
-                <input type="email" id="m_Email" value="${escapeHtml(appt.Email||'')}" />
-              </div>
-            </div>
-
-            <div class="form-row">
-              <div class="form-col">
-                <label>Type</label>
-                <select id="m_Type">
-                  <option ${appt.TypePatient==='Consultation'?'selected':''}>Consultation</option>
-                  <option ${appt.TypePatient==='Soins'?'selected':''}>Soins</option>
-                  <option ${appt.TypePatient==='Extraction'?'selected':''}>Extraction</option>
-                  <option ${appt.TypePatient==='Controle'?'selected':''}>Contrôle</option>
-                </select>
-              </div>
-              <div class="form-col">
-                <label>Statut</label>
-                <select id="m_Statut">
-                  <option ${appt.Statut==='Planifié'?'selected':''}>Planifié</option>
-                  <option ${appt.Statut==='Confirmé'?'selected':''}>Confirmé</option>
-                  <option ${appt.Statut==='Annulé'?'selected':''}>Annulé</option>
-                </select>
-              </div>
-            </div>
-
-            <div class="actions">
-              ${appt.IDRv? '<button id="delApptBtn" class="btn danger">Supprimer</button>' : ''}
-              <button id="cancelApptBtn" class="btn">Annuler</button>
-              <button id="saveApptBtn" class="btn primary">Enregistrer</button>
-            </div>
+        <div class="form-row">
+          <div class="form-col">
+            <label>Date</label>
+            <input type="date" id="m_DateRv" value="${escapeHtml(appt.DateRv||'')}" />
+          </div>
+          <div class="form-col">
+            <label>CIN du Patient</label>
+            <input type="text" id="m_CIN" value="${escapeHtml(appt.CIN||'')}" 
+                   placeholder="Saisir CIN du patient" />
+            <div class="small muted" id="cinInfo" style="margin-top: 4px;"></div>
+          </div>
+          <div class="form-col">
+            <label>Heure</label>
+            <input type="time" id="m_HeureRv" value="${escapeHtml(appt.HeureRv||'')}" />
           </div>
         </div>
-      `;
 
-      root.querySelector('#cancelApptBtn').onclick = closeModal;
-      root.querySelector('#saveApptBtn').onclick = async () => {
-        // build payload
-        const payload = {
-          IDRv: appt.IDRv || null,
-          IDP: parseInt( (document.getElementById('m_Patient').value || '').trim() ) || null,
-          NomPrenom: document.getElementById('m_Patient').value.trim(),
-          Email: document.getElementById('m_Email').value.trim(),
-          TypePatient: document.getElementById('m_Type').value,
-          Statut: document.getElementById('m_Statut').value,
-          DateRv: document.getElementById('m_DateRv').value,
-          HeureRv: document.getElementById('m_HeureRv').value,
-          CIN: document.getElementById('CIN').value,
-        };
+        <div class="form-row">
+          <div class="form-col">
+            <label>Patient (Nom complet)</label>
+            <input type="text" id="m_Patient" placeholder="Saisir nom complet du patient" value="${escapeHtml(appt.NomPrenom||'')}" />
+            <div class="small muted" id="patientInfo" style="margin-top: 4px;"></div>
+          </div>
+          <div class="form-col">
+            <label>Email</label>
+            <input type="email" id="m_Email" value="${escapeHtml(appt.Email||'')}" />
+          </div>
+        </div>
 
-        try{
-          if(payload.IDRv){
-            await window.electronAPI.updateAppointment(payload);
-            alert('RDV modifié.');
-          }else{
-            await window.electronAPI.createAppointment(payload);
-            alert('RDV créé.');
-          }
-          closeModal();
-          await loadTodayAppointments();
-          navigateTo('dashboard');
-        }catch(e){ console.error(e); alert('Erreur enregistre RDV'); }
-      };
+        <div class="form-row">
+          <div class="form-col">
+            <label>Type</label>
+            <select id="m_Type">
+              <option ${appt.TypePatient==='Consultation'?'selected':''}>Consultation</option>
+              <option ${appt.TypePatient==='Soins'?'selected':''}>Soins</option>
+              <option ${appt.TypePatient==='Extraction'?'selected':''}>Extraction</option>
+              <option ${appt.TypePatient==='Controle'?'selected':''}>Contrôle</option>
+            </select>
+          </div>
+          <div class="form-col">
+            <label>Statut</label>
+            <select id="m_Statut">
+              <option ${appt.Statut==='Planifié'?'selected':''}>Planifié</option>
+              <option ${appt.Statut==='Confirmé'?'selected':''}>Confirmé</option>
+              <option ${appt.Statut==='Annulé'?'selected':''}>Annulé</option>
+            </select>
+          </div>
+        </div>
 
-      if(appt.IDRv){
-        root.querySelector('#delApptBtn').onclick = async () => {
-          if(!confirm('Supprimer ce RDV ?')) return;
-          try{
-            await window.electronAPI.deleteAppointment(Number(appt.IDRv));
-            alert('RDV supprimé.');
-            closeModal();
-            await loadTodayAppointments();
-            navigateTo('dashboard');
-          }catch(e){ console.error(e); alert('Erreur suppression RDV'); }
-        };
+        <div class="actions">
+          ${appt.IDRv? '<button id="delApptBtn" class="btn danger">Supprimer</button>' : ''}
+          <button id="cancelApptBtn" class="btn">Annuler</button>
+          <button id="saveApptBtn" class="btn primary">Enregistrer</button>
+        </div>
+      </div>
+    </div>
+  `;
+
+  // Add patient lookup functionality
+  const cinInput = root.querySelector('#m_CIN');
+  const patientInput = root.querySelector('#m_Patient');
+  const cinInfo = root.querySelector('#cinInfo');
+  const patientInfo = root.querySelector('#patientInfo');
+
+  let foundPatientId = null;
+
+  // CIN lookup
+  cinInput.addEventListener('input', async () => {
+    const cin = cinInput.value.trim();
+    if (cin.length > 2) {
+      try {
+        const patient = await window.electronAPI.getPatientByCIN(cin);
+        if (patient) {
+          cinInfo.innerHTML = `<span style="color: var(--success);">✓ Patient trouvé: ${escapeHtml(patient.Nom)} ${escapeHtml(patient.Prenom)}</span>`;
+          patientInput.value = `${patient.Nom} ${patient.Prenom}`;
+          foundPatientId = patient.IDP;
+        } else {
+          cinInfo.innerHTML = `<span style="color: var(--warning);">⚠ Patient non trouvé - nouveau patient sera créé</span>`;
+          foundPatientId = null;
+        }
+      } catch (error) {
+        cinInfo.innerHTML = `<span style="color: var(--danger);">Erreur de recherche</span>`;
+        foundPatientId = null;
       }
+    } else {
+      cinInfo.innerHTML = '';
+      foundPatientId = null;
     }
+  });
+
+  // Name lookup
+  patientInput.addEventListener('input', async () => {
+    const name = patientInput.value.trim();
+    if (name.length > 3) {
+      try {
+        const patients = await window.electronAPI.getPatients();
+        const found = patients.find(p => 
+          `${p.Nom} ${p.Prenom}`.toLowerCase().includes(name.toLowerCase()) ||
+          name.toLowerCase().includes(`${p.Nom} ${p.Prenom}`.toLowerCase())
+        );
+        if (found) {
+          patientInfo.innerHTML = `<span style="color: var(--success);">✓ Patient trouvé: CIN ${escapeHtml(found.CIN)}</span>`;
+          cinInput.value = found.CIN;
+          foundPatientId = found.IDP;
+        } else {
+          patientInfo.innerHTML = `<span style="color: var(--warning);">⚠ Patient non trouvé</span>`;
+          foundPatientId = null;
+        }
+      } catch (error) {
+        patientInfo.innerHTML = `<span style="color: var(--danger);">Erreur de recherche</span>`;
+        foundPatientId = null;
+      }
+    } else {
+      patientInfo.innerHTML = '';
+      foundPatientId = null;
+    }
+  });
+
+  root.querySelector('#cancelApptBtn').onclick = closeModal;
+  
+  root.querySelector('#saveApptBtn').onclick = async () => {
+    const cin = document.getElementById('m_CIN').value.trim();
+    const nomPrenom = document.getElementById('m_Patient').value.trim();
+    
+    if (!cin && !nomPrenom) {
+      alert('Veuillez saisir au moins le CIN ou le nom du patient');
+      return;
+    }
+
+    const payload = {
+      IDRv: appt.IDRv || null,
+      CIN: cin,
+      NomPrenom: nomPrenom,
+      Email: document.getElementById('m_Email').value.trim(),
+      TypePatient: document.getElementById('m_Type').value,
+      Statut: document.getElementById('m_Statut').value,
+      DateRv: document.getElementById('m_DateRv').value,
+      HeureRv: document.getElementById('m_HeureRv').value,
+    };
+
+    // If we found a patient during lookup, include the IDP
+    if (foundPatientId) {
+      payload.IDP = foundPatientId;
+    }
+
+    console.log('Saving appointment with payload:', payload);
+
+    try{
+      if(payload.IDRv){
+        await window.electronAPI.updateAppointment(payload);
+        alert('RDV modifié.');
+      }else{
+        await window.electronAPI.createAppointment(payload);
+        alert('RDV créé.');
+      }
+      closeModal();
+      await loadTodayAppointments();
+      navigateTo('dashboard');
+    }catch(e){ 
+      console.error('Erreur enregistre RDV:', e); 
+      alert('Erreur enregistrement RDV: ' + e.message); 
+    }
+  };
+
+  if(appt.IDRv){
+    root.querySelector('#delApptBtn').onclick = async () => {
+      if(!confirm('Supprimer ce RDV ?')) return;
+      try{
+        await window.electronAPI.deleteAppointment(Number(appt.IDRv));
+        alert('RDV supprimé.');
+        closeModal();
+        await loadTodayAppointments();
+        navigateTo('dashboard');
+      }catch(e){ console.error(e); alert('Erreur suppression RDV'); }
+    };
+  }
+}
 
     function closeModal(){
       const root = $('modalRoot');
@@ -1229,50 +1444,237 @@
       const p = list.find(x=>x.IDP===idp);
       openPatientModal(p);
     };
+/* ===================== CONSULTATIONS ===================== */
+function renderConsultationsPage(){
+  $('pageTitle').textContent = 'Consultations';
+  $('pageSubtitle').textContent = 'Dossiers et consultations dentaires';
+  const area = $('contentArea');
+  area.innerHTML = `
+    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:20px">
+      <h3>Consultations</h3>
+      <div>
+        <button id="addConsultBtn" class="btn primary">+ Nouvelle Consultation</button>
+      </div>
+    </div>
+    <div style="overflow:auto">
+      <table class="table" id="consultTable">
+        <thead><tr><th>ID</th><th>Référence</th><th>Patient</th><th>Motif</th><th>Diagnostic</th><th>Médecin</th><th>Actions</th></tr></thead>
+        <tbody id="consultTbody"></tbody>
+      </table>
+    </div>
+  `;
+  renderConsultTable();
+  document.getElementById('addConsultBtn').addEventListener('click', ()=> openConsultModal());
+}
 
-    /* ===================== CONSULTATIONS ===================== */
-    function renderConsultationsPage(){
-      $('pageTitle').textContent = 'Consultations';
-      $('pageSubtitle').textContent = 'Dossiers et consultations dentaires';
-      const area = $('contentArea');
-      area.innerHTML = `
-        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:20px">
-          <h3>Consultations</h3>
-          <div>
-            <button id="addConsultBtn" class="btn primary">+ Nouvelle Consultation</button>
+function renderConsultTable(){
+  const tbody = $('consultTbody');
+  const list = consultationsCache || [];
+  if(!list.length){ tbody.innerHTML = `<tr><td colspan="7" class="small muted">Aucune consultation</td></tr>`; return; }
+  tbody.innerHTML = list.map(c => {
+    const p = patientsCache.find(x=>x.IDP===c.IDP) || {};
+    return `<tr>
+      <td>${c.IDC}</td>
+      <td><strong>${escapeHtml(c.consultation_ref||'N/A')}</strong></td>
+      <td>${escapeHtml(p.Nom||'') } ${escapeHtml(p.Prenom||'')}</td>
+      <td>${escapeHtml(c.Motif||'')}</td>
+      <td>${escapeHtml(c.Diagnostic||'')}</td>
+      <td>${escapeHtml(c.NomMedecin||'')}</td>
+      <td>
+        <button class="btn" onclick="openConsultDetails(${c.IDC})">Voir</button>
+        <button class="btn" onclick="openConsultEdit(${c.IDC})">Modifier</button>
+        <button class="btn danger" onclick="deleteConsultation(${c.IDC})">Supprimer</button>
+        <button class="btn primary" onclick="copyConsultationRef('${c.consultation_ref||''}')">Copier Réf</button>
+      </td>
+    </tr>`;
+  }).join('');
+}
+
+function openConsultModal(data=null){
+  const isEdit = !!data;
+  const consult = data || { 
+    IDC:null, 
+    IDP:null, 
+    CIN:'', 
+    Motif:'', 
+    Diagnostic:'', 
+    Observations:'', 
+    Remarques:'', 
+    NomMedecin:'', 
+    PiècesJointes_FileName:'',
+    consultation_ref: data ? data.consultation_ref : generateConsultationRef()
+  };
+  
+  const root = $('modalRoot'); root.style.display='block';
+  root.innerHTML = `
+    <div class="modal-backdrop">
+      <div class="modal">
+        <h3>${isEdit? 'Modifier Consultation' : 'Nouvelle Consultation'}</h3>
+        
+        <!-- Add the reference field display -->
+        <div class="form-row">
+          <div class="form-col">
+            <label>Référence Consultation</label>
+            <input id="c_Ref" type="text" value="${escapeHtml(consult.consultation_ref||'')}" readonly 
+                   style="background:#f0f0f0; font-weight:bold; color:var(--accent)" />
+            <div class="small muted">Cette référence sera utilisée pour lier les ordonnances</div>
           </div>
         </div>
-        <div style="overflow:auto">
-          <table class="table" id="consultTable">
-            <thead><tr><th>ID</th><th>Patient</th><th>Motif</th><th>Diagnostic</th><th>Médecin</th><th>Actions</th></tr></thead>
-            <tbody id="consultTbody"></tbody>
-          </table>
+        
+        <div class="form-row">
+          <div class="form-col">
+            <label>CIN du Patient *</label>
+            <input id="c_CIN" type="text" value="${escapeHtml(consult.CIN||'')}" 
+                   placeholder="Saisir le CIN du patient" />
+            <div class="small muted" id="cinPatientInfo" style="margin-top: 4px;"></div>
+          </div>
         </div>
-      `;
-      renderConsultTable();
-      document.getElementById('addConsultBtn').addEventListener('click', ()=> openConsultModal());
-    }
+        <div class="form-row">
+          <div class="form-col"><label>Motif</label><input id="c_Motif" type="text" value="${escapeHtml(consult.Motif||'')}" /></div>
+          <div class="form-col"><label>Diagnostic</label><input id="c_Diagnostic" type="text" value="${escapeHtml(consult.Diagnostic||'')}" /></div>
+        </div>
+        <div class="form-row">
+          <div class="form-col"><label>Observations</label><textarea id="c_Observations">${escapeHtml(consult.Observations||'')}</textarea></div>
+        </div>
+        <div class="form-row">
+          <div class="form-col"><label>Nom Médecin</label><input id="c_NomMed" type="text" value="${escapeHtml(consult.NomMedecin||'')}" /></div>
+          <div class="form-col"><label>Pièce jointe (jpg/png/pdf)</label><input id="c_File" type="file" /></div>
+        </div>
+        <div class="actions">
+          ${isEdit? '<button id="delConsultBtn" class="btn danger">Supprimer</button>':''}
+          <button id="cancelConsult" class="btn">Annuler</button>
+          <button id="saveConsult" class="btn primary">${isEdit? 'Sauvegarder' : 'Enregistrer'}</button>
+        </div>
+      </div>
+    </div>
+  `;
 
-    function renderConsultTable(){
-      const tbody = $('consultTbody');
-      const list = consultationsCache || [];
-      if(!list.length){ tbody.innerHTML = `<tr><td colspan="6" class="small muted">Aucune consultation</td></tr>`; return; }
-      tbody.innerHTML = list.map(c => {
-        const p = patientsCache.find(x=>x.IDP===c.IDP) || {};
-        return `<tr>
-          <td>${c.IDC}</td>
-          <td>${escapeHtml(p.Nom||'') } ${escapeHtml(p.Prenom||'')}</td>
-          <td>${escapeHtml(c.Motif||'')}</td>
-          <td>${escapeHtml(c.Diagnostic||'')}</td>
-          <td>${escapeHtml(c.NomMedecin||'')}</td>
-          <td>
-            <button class="btn" onclick="openConsultDetails(${c.IDC})">Voir</button>
-            <button class="btn" onclick="openConsultEdit(${c.IDC})">Modifier</button>
-            <button class="btn danger" onclick="deleteConsultation(${c.IDC})">Supprimer</button>
-          </td>
-        </tr>`;
-      }).join('');
+  // Add live CIN search functionality
+  const cinInput = root.querySelector('#c_CIN');
+  const patientInfo = root.querySelector('#cinPatientInfo');
+  
+  cinInput.addEventListener('input', async () => {
+    const cin = cinInput.value.trim();
+    if (cin.length > 3) {
+      try {
+        const patient = await window.electronAPI.getPatientByCIN(cin);
+        if (patient) {
+          patientInfo.innerHTML = `<span style="color: var(--success);">✓ Patient trouvé: ${escapeHtml(patient.Nom)} ${escapeHtml(patient.Prenom)}</span>`;
+        } else {
+          patientInfo.innerHTML = `<span style="color: var(--warning);">⚠ Patient non trouvé - vérifiez le CIN</span>`;
+        }
+      } catch (error) {
+        patientInfo.innerHTML = `<span style="color: var(--danger);">Erreur de recherche</span>`;
+      }
+    } else {
+      patientInfo.innerHTML = '';
     }
+  });
+
+  // If editing and CIN exists, show patient info immediately
+  if (isEdit && consult.CIN) {
+    window.electronAPI.getPatientByCIN(consult.CIN).then(patient => {
+      if (patient) {
+        patientInfo.innerHTML = `<span style="color: var(--success);">Patient: ${escapeHtml(patient.Nom)} ${escapeHtml(patient.Prenom)}</span>`;
+      }
+    });
+  }
+
+  root.querySelector('#cancelConsult').onclick = closeModal;
+
+  root.querySelector('#saveConsult').onclick = async () => {
+    try {
+      const cin = document.getElementById('c_CIN').value.trim();
+      if(!cin) return alert('Veuillez saisir le CIN du patient.');
+
+      const patient = await window.electronAPI.getPatientByCIN(cin);
+      if(!patient) return alert('Patient introuvable. Vérifiez le CIN.');
+
+      const payload = {
+        IDC: consult.IDC || undefined,
+        IDP: patient.IDP,
+        CIN: cin,
+        Motif: document.getElementById('c_Motif').value.trim(),
+        Diagnostic: document.getElementById('c_Diagnostic').value.trim(),
+        Observations: document.getElementById('c_Observations').value.trim(),
+        Remarques: consult.Remarques || '',
+        NomMedecin: document.getElementById('c_NomMed').value.trim(),
+        consultation_ref: document.getElementById('c_Ref').value.trim() || generateConsultationRef(),
+        PiècesJointes_FileName: consult.PiècesJointes_FileName || '',
+        PiècesJointes_FileType: consult.PiècesJointes_FileType || '',
+        PiècesJointes_FileData: null
+      };
+
+      const finput = document.getElementById('c_File');
+      if(finput && finput.files && finput.files[0]){
+        const file = finput.files[0];
+        const reader = new FileReader();
+        reader.onload = async () => {
+          const base64 = reader.result.split(',')[1];
+          payload.PiècesJointes_FileData = base64;
+          payload.PiècesJointes_FileName = file.name;
+          payload.PiècesJointes_FileType = file.type;
+          if(consult.PiècesJointes_FileName) payload.OldFileName = consult.PiècesJointes_FileName;
+          await saveConsultation(payload, isEdit);
+        };
+        reader.readAsDataURL(file);
+      } else {
+        await saveConsultation(payload, isEdit);
+      }
+
+    } catch (err) {
+      console.error(err);
+      alert('Erreur lors de la sauvegarde.');
+    }
+  };
+
+  if(isEdit){
+    root.querySelector('#delConsultBtn').onclick = async () => {
+      if(!confirm('Supprimer cette consultation ?')) return;
+      try{ 
+        await window.electronAPI.deleteConsultation(Number(consult.IDC)); 
+        alert('Supprimé'); 
+        closeModal(); 
+        consultationsCache = await window.electronAPI.getConsultations(); 
+        renderConsultTable(); 
+      }
+      catch(e){ console.error(e); alert('Erreur suppression') }
+    };
+  }
+}
+
+async function saveConsultation(payload, isEdit){
+  try{
+    if(isEdit) {
+      await window.electronAPI.updateConsultation(payload);
+      alert('Consultation modifiée.');
+    } else {
+      await window.electronAPI.addConsultation(payload);
+      alert('Consultation ajoutée. Référence: ' + payload.consultation_ref);
+    }
+    closeModal();
+    consultationsCache = await window.electronAPI.getConsultations();
+    renderConsultTable();
+  }catch(e){ console.error(e); alert('Erreur enregistrement consultation'); }
+}
+
+window.openConsultEdit = async function(IDC){
+  try {
+    const consult = await window.electronAPI.getConsultationById(Number(IDC));
+    if(!consult){
+      alert("Consultation introuvable");
+      return;
+    }
+    // Make sure the consultation_ref is included
+    if (!consult.consultation_ref) {
+      consult.consultation_ref = generateConsultationRef();
+    }
+    openConsultModal(consult);
+  } catch (err) {
+    console.error("openConsultEdit error:", err);
+    alert("Erreur lors de la récupération de la consultation.");
+  }
+};
 
 window.openConsultDetails = async function(IDC){
   const consult = await window.electronAPI.getConsultationById(Number(IDC));
@@ -1282,20 +1684,15 @@ window.openConsultDetails = async function(IDC){
   const root = $('modalRoot'); 
   root.style.display='block';
 
-  // Build preview based on physical file in assets folder
   let previewHTML = '<div class="small muted">Aucun fichier</div>';
-
-  // Get the filename from the database (stored as CIN-consultation.extension)
   const fileName = consult['PiècesJointes_FileName'];
   
-  // Function to check and create file URL
   async function getFilePreview() {
     try {
       if (!fileName) {
         return '<div class="small muted">Aucun fichier joint</div>';
       }
 
-      // Use Electron API to get the file
       const fileInfo = await window.electronAPI.getConsultationFile(fileName);
       
       if (!fileInfo.exists) {
@@ -1305,7 +1702,6 @@ window.openConsultDetails = async function(IDC){
       const fileUrl = fileInfo.url;
       const fileExtension = fileInfo.extension.toLowerCase();
 
-      // Handle different file types
       if (['jpg', 'jpeg', 'png', 'gif', 'bmp', 'webp'].includes(fileExtension)) {
         return `
           <div class="image-preview">
@@ -1406,14 +1802,22 @@ window.openConsultDetails = async function(IDC){
     }
   }
 
-  // Load the preview asynchronously
   previewHTML = '<div class="small muted">Chargement du fichier...</div>';
   
-  // MODAL HTML
   root.innerHTML = `
     <div class="modal-backdrop">
       <div class="modal" style="max-width:800px;">
         <h3>Consultation #${consult.IDC}</h3>
+
+        <!-- Add reference display -->
+        <div style="background:var(--accent-light); padding:12px; border-radius:6px; margin-bottom:16px;">
+          <strong>Référence Consultation:</strong> 
+          <span style="font-size:18px; font-weight:bold; color:var(--accent-dark)">${escapeHtml(consult.consultation_ref||'N/A')}</span>
+          <button class="btn" onclick="copyConsultationRef('${consult.consultation_ref||''}')" 
+                  style="margin-left:12px; padding:4px 8px; font-size:12px;">
+            📋 Copier
+          </button>
+        </div>
 
         <p><strong>Patient :</strong> ${escapeHtml(p.Nom||'')} ${escapeHtml(p.Prenom||'')} (CIN: ${p.CIN || 'N/A'})</p>
         <p><strong>Motif :</strong> ${escapeHtml(consult.Motif)}</p>
@@ -1436,14 +1840,12 @@ window.openConsultDetails = async function(IDC){
     </div>
   `;
 
-  // Load file preview after modal is rendered
   if (fileName) {
     getFilePreview().then(html => {
       const previewContainer = root.querySelector('.file-preview');
       if (previewContainer) {
         previewContainer.innerHTML = html;
         
-        // Load text content for txt files
         const textContentEl = previewContainer.querySelector('#textContent');
         if (textContentEl) {
           const downloadLink = previewContainer.querySelector('a[download]');
@@ -1462,7 +1864,6 @@ window.openConsultDetails = async function(IDC){
     });
   }
 
-  // EVENTS
   root.querySelector('#closeConsult').onclick = closeModal;
 
   root.querySelector('#printConsult').onclick = () => {
@@ -1484,6 +1885,7 @@ window.openConsultDetails = async function(IDC){
     y+=12;
     doc.setFontSize(12);
 
+    addLine('Référence', consult.consultation_ref || 'N/A');
     addLine('Patient', p.Nom + ' ' + p.Prenom);
     addLine('CIN', p.CIN || 'N/A');
     addLine('Motif', consult.Motif);
@@ -1499,132 +1901,14 @@ window.openConsultDetails = async function(IDC){
   };
 };
 
-//
-    function openConsultModal(data=null){
-  const isEdit = !!data;
-  const consult = data || { IDC:null, IDP:null, CIN:'', Motif:'', Diagnostic:'', Observations:'', Remarques:'', NomMedecin:'', PiècesJointes_FileName:'' };
-  const root = $('modalRoot'); root.style.display='block';
-  root.innerHTML = `
-    <div class="modal-backdrop">
-      <div class="modal">
-        <h3>${isEdit? 'Modifier Consultation' : 'Nouvelle Consultation'}</h3>
-        <div class="form-row">
-          <div class="form-col"><label>CIN</label><input id="c_CIN" type="text" value="${escapeHtml(consult.CIN||'')}" /></div>
-        </div>
-        <div class="form-row">
-          <div class="form-col"><label>Motif</label><input id="c_Motif" type="text" value="${escapeHtml(consult.Motif||'')}" /></div>
-          <div class="form-col"><label>Diagnostic</label><input id="c_Diagnostic" type="text" value="${escapeHtml(consult.Diagnostic||'')}" /></div>
-        </div>
-        <div class="form-row">
-          <div class="form-col"><label>Observations</label><textarea id="c_Observations">${escapeHtml(consult.Observations||'')}</textarea></div>
-        </div>
-        <div class="form-row">
-          <div class="form-col"><label>Nom Médecin</label><input id="c_NomMed" type="text" value="${escapeHtml(consult.NomMedecin||'')}" /></div>
-          <div class="form-col"><label>Pièce jointe (jpg/png/pdf)</label><input id="c_File" type="file" /></div>
-        </div>
-        <div class="actions">
-          ${isEdit? '<button id="delConsultBtn" class="btn danger">Supprimer</button>':''}
-          <button id="cancelConsult" class="btn">Annuler</button>
-          <button id="saveConsult" class="btn primary">${isEdit? 'Sauvegarder' : 'Enregistrer'}</button>
-        </div>
-      </div>
-    </div>
-  `;
-  root.querySelector('#cancelConsult').onclick = closeModal;
-
- root.querySelector('#saveConsult').onclick = async () => {
-  try {
-    const cin = document.getElementById('c_CIN').value.trim();
-    if(!cin) return alert('Veuillez saisir le CIN du patient.');
-
-    const patient = await window.electronAPI.getPatientByCIN(cin);
-    if(!patient) return alert('Patient introuvable.');
-
-    const payload = {
-      IDC: consult.IDC || undefined,
-      IDP: patient.IDP,
-      CIN: cin,
-      Motif: document.getElementById('c_Motif').value.trim(),
-      Diagnostic: document.getElementById('c_Diagnostic').value.trim(),
-      Observations: document.getElementById('c_Observations').value.trim(),
-      Remarques: consult.Remarques || '',
-      NomMedecin: document.getElementById('c_NomMed').value.trim(),
-      PiècesJointes_FileName: consult.PiècesJointes_FileName || '', // keep old filename by default
-      PiècesJointes_FileType: consult.PiècesJointes_FileType || '',
-      PiècesJointes_FileData: null // default null
-    };
-
-    const finput = document.getElementById('c_File');
-    if(finput && finput.files && finput.files[0]){
-      const file = finput.files[0];
-      const reader = new FileReader();
-      reader.onload = async () => {
-        const base64 = reader.result.split(',')[1];
-        payload.PiècesJointes_FileData = base64;
-        payload.PiècesJointes_FileName = file.name;
-        payload.PiècesJointes_FileType = file.type;
-        if(consult.PiècesJointes_FileName) payload.OldFileName = consult.PiècesJointes_FileName;
-        await saveConsultation(payload, isEdit);
-      };
-      reader.readAsDataURL(file);
-    } else {
-      // no file chosen -> keep old file
-      await saveConsultation(payload, isEdit);
-    }
-
-  } catch (err) {
-    console.error(err);
-    alert('Erreur lors de la sauvegarde.');
-  }
-};
-
-
-  if(isEdit){
-    root.querySelector('#delConsultBtn').onclick = async () => {
-      if(!confirm('Supprimer cette consultation ?')) return;
-      try{ await window.electronAPI.deleteConsultation(Number(consult.IDC)); alert('Supprimé'); closeModal(); consultationsCache = await window.electronAPI.getConsultations(); renderConsultTable(); }
-      catch(e){ console.error(e); alert('Erreur suppression') }
-    };
-  }
+async function deleteConsultation(IDC){
+  if(!confirm('Supprimer la consultation ?')) return;
+  try{ await window.electronAPI.deleteConsultation(Number(IDC)); consultationsCache = await window.electronAPI.getConsultations(); renderConsultTable(); alert('Supprimé'); }
+  catch(e){ console.error(e); alert('Erreur suppression'); }
 }
-//
-    async function saveConsultation(payload, isEdit){
-  try{
-    if(isEdit) {
-      await window.electronAPI.updateConsultation(payload);
-      alert('Consultation modifiée.');
-    } else {
-      await window.electronAPI.addConsultation(payload);
-      alert('Consultation ajoutée.');
-    }
-    closeModal();
-    consultationsCache = await window.electronAPI.getConsultations();
-    renderConsultTable();
-  }catch(e){ console.error(e); alert('Erreur enregistrement consultation'); }
-}
-window.openConsultEdit = async function(IDC){
-  try {
-    const consult = await window.electronAPI.getConsultationById(Number(IDC));
-    if(!consult){
-      alert("Consultation introuvable");
-      return;
-    }
-    openConsultModal(consult); // ← هادي غادي تفتح المودال مع البيانات
-  } catch (err) {
-    console.error("openConsultEdit error:", err);
-    alert("Erreur lors de la récupération de la consultation.");
-  }
-};
 
-
-    async function deleteConsultation(IDC){
-      if(!confirm('Supprimer la consultation ?')) return;
-      try{ await window.electronAPI.deleteConsultation(Number(IDC)); consultationsCache = await window.electronAPI.getConsultations(); renderConsultTable(); alert('Supprimé'); }
-      catch(e){ console.error(e); alert('Erreur suppression'); }
-    }
-
-    /* ===================== ORDONNANCES ===================== */
-  function renderOrdonnancesPage(){
+/* ===================== ORDONNANCES ===================== */
+function renderOrdonnancesPage(){
   $('pageTitle').textContent = 'Ordonnances';
   $('pageSubtitle').textContent = 'Gestion des ordonnances - Utilisez le CIN du patient';
   const area = $('contentArea');
@@ -1635,7 +1919,7 @@ window.openConsultEdit = async function(IDC){
     </div>
     <div style="overflow:auto">
       <table class="table" id="ordonnTable">
-        <thead><tr><th>ID</th><th>Patient</th><th>CIN</th><th>Médecin</th><th>Médicaments</th><th>Date</th><th>Actions</th></tr></thead>
+        <thead><tr><th>ID</th><th>Patient</th><th>CIN</th><th>Médecin</th><th>Médicaments</th><th>Date</th><th>Référence Consultation</th><th>Actions</th></tr></thead>
         <tbody id="ordonnTbody"></tbody>
       </table>
     </div>
@@ -1644,12 +1928,11 @@ window.openConsultEdit = async function(IDC){
   document.getElementById('addOrdoBtn').addEventListener('click', ()=> openOrdonnanceModal());
 }
 
-    function renderOrdonnancesTable(){
+function renderOrdonnancesTable(){
   const tbody = $('ordonnTbody');
   const list = ordonnancesCache || [];
-  if(!list.length){ tbody.innerHTML = `<tr><td colspan="7" class="small muted">Aucune ordonnance</td></tr>`; return; }
+  if(!list.length){ tbody.innerHTML = `<tr><td colspan="8" class="small muted">Aucune ordonnance</td></tr>`; return; }
   
-  // Create a promise chain to get consultation details for each ordonnance
   const renderPromises = list.map(async (o) => {
     const c = consultationsCache.find(x=>x.IDC===o.IDC) || {};
     const p = patientsCache.find(x=>x.IDP===o.IDP) || {};
@@ -1664,6 +1947,9 @@ window.openConsultEdit = async function(IDC){
       <td>${escapeHtml(medsText)}</td>
       <td>${escapeHtml(c.DateCreation ? new Date(c.DateCreation).toLocaleDateString() : 'N/A')}</td>
       <td>
+        <span class="pill">${escapeHtml(o.consultation_ref || 'Non liée')}</span>
+      </td>
+      <td>
         <button class="btn" onclick="openOrdonnanceDetails(${o.IDR})">Voir</button>
         <button class="btn" onclick="openOrdonnanceEdit(${o.IDR})">Modifier</button>
         <button class="btn danger" onclick="deleteOrdonnance(${o.IDR})">Supprimer</button>
@@ -1671,13 +1957,12 @@ window.openConsultEdit = async function(IDC){
     </tr>`;
   });
 
-  // Wait for all promises to resolve and render the table
   Promise.all(renderPromises).then(rows => {
     tbody.innerHTML = rows.join('');
   });
 }
 
-   function openOrdonnanceModal(data = null){
+function openOrdonnanceModal(data = null){
   const isEdit = !!data;
   const user = window.electronAPI.getCurrentUser ? window.electronAPI.getCurrentUser() : { Nom: '', Prenom: '' };
   const doctorName = `${user.Nom || ''} ${user.Prenom || ''}`.trim() || 'Dr. Non spécifié';
@@ -1686,18 +1971,60 @@ window.openConsultEdit = async function(IDC){
     IDR: null, 
     patientCIN: '', 
     medecinName: doctorName,
-    M1: '', P1: '', D1: '',
-    M2: '', P2: '', D2: '',
-    M3: '', P3: '', D3: '',
-    Remarques: '' 
+    consultation_ref: '',
+    medications: [
+      { medicament: '', posologie: '', duree: '' },
+      { medicament: '', posologie: '', duree: '' },
+      { medicament: '', posologie: '', duree: '' }
+    ],
+    Remarques: ''
   };
+
+  // If editing, convert old format to new format
+  if (isEdit && data) {
+    o.medications = [];
+    for (let i = 1; i <= 10; i++) {
+      const med = data[`M${i}`] || data[`Medicament${i}`];
+      const pos = data[`P${i}`] || data[`Posologie${i}`];
+      const dur = data[`D${i}`] || data[`Duree${i}`];
+      
+      if (med || pos || dur) {
+        o.medications.push({
+          medicament: med || '',
+          posologie: pos || '',
+          duree: dur || ''
+        });
+      }
+    }
+    
+    // Ensure we have at least 3 medication slots
+    while (o.medications.length < 3) {
+      o.medications.push({ medicament: '', posologie: '', duree: '' });
+    }
+  }
 
   const root = $('modalRoot'); 
   root.style.display = 'block';
   root.innerHTML = `
     <div class="modal-backdrop">
-      <div class="modal" style="max-width: 800px;">
+      <div class="modal" style="max-width: 900px;">
         <h3>${isEdit ? 'Modifier Ordonnance' : 'Nouvelle Ordonnance'}</h3>
+        
+        <!-- Add consultation reference field -->
+        <div class="form-row">
+          <div class="form-col">
+            <label>Référence Consultation (optionnel)</label>
+            <input id="o_ConsultRef" type="text" value="${escapeHtml(o.consultation_ref || '')}" 
+                   placeholder="Saisir la référence de consultation" />
+            <div class="small muted">Collez la référence de la consultation pour lier l'ordonnance</div>
+          </div>
+          <div class="form-col">
+            <label>Rechercher Consultation</label>
+            <button type="button" class="btn" onclick="openConsultationSelector()" style="width:100%">
+              🔍 Choisir une Consultation
+            </button>
+          </div>
+        </div>
         
         <div class="form-row">
           <div class="form-col">
@@ -1713,31 +2040,41 @@ window.openConsultEdit = async function(IDC){
           </div>
         </div>
 
-        <div style="margin: 20px 0; padding: 12px; background: #f8fafc; border-radius: 6px;">
-          <strong style="color: var(--accent);">Médicament 1</strong>
-          <div class="form-row" style="margin-top: 8px;">
-            <div class="form-col"><input id="o_Med1" type="text" placeholder="Nom du médicament" value="${escapeHtml(o.M1 || '')}" /></div>
-            <div class="form-col"><input id="o_Pos1" type="text" placeholder="Posologie" value="${escapeHtml(o.P1 || '')}" /></div>
-            <div class="form-col"><input id="o_Dur1" type="text" placeholder="Durée du traitement" value="${escapeHtml(o.D1 || '')}" /></div>
-          </div>
+        <div id="medicationsContainer">
+          ${o.medications.map((med, index) => `
+            <div class="medication-section" data-index="${index}">
+              <div class="medication-header">
+                <strong style="color: var(--accent);">Médicament ${index + 1}</strong>
+                ${index >= 3 ? `
+                  <button type="button" class="remove-medication-btn" onclick="removeMedication(${index})">×</button>
+                ` : ''}
+              </div>
+              <div class="medication-fields">
+                <div class="form-col">
+                  <input type="text" id="o_Med${index+1}" placeholder="Nom du médicament" 
+                         value="${escapeHtml(med.medicament)}" />
+                </div>
+                <div class="form-col">
+                  <input type="text" id="o_Pos${index+1}" placeholder="Posologie" 
+                         value="${escapeHtml(med.posologie)}" />
+                </div>
+                <div class="form-col">
+                  <input type="text" id="o_Dur${index+1}" placeholder="Durée du traitement" 
+                         value="${escapeHtml(med.duree)}" />
+                </div>
+                ${index >= 3 ? '<div class="form-col"></div>' : ''}
+              </div>
+            </div>
+          `).join('')}
         </div>
 
-        <div style="margin: 20px 0; padding: 12px; background: #f8fafc; border-radius: 6px;">
-          <strong style="color: var(--accent);">Médicament 2</strong>
-          <div class="form-row" style="margin-top: 8px;">
-            <div class="form-col"><input id="o_Med2" type="text" value="${escapeHtml(o.M2 || '')}" /></div>
-            <div class="form-col"><input id="o_Pos2" type="text" value="${escapeHtml(o.P2 || '')}" /></div>
-            <div class="form-col"><input id="o_Dur2" type="text" value="${escapeHtml(o.D2 || '')}" /></div>
-          </div>
-        </div>
-
-        <div style="margin: 20px 0; padding: 12px; background: #f8fafc; border-radius: 6px;">
-          <strong style="color: var(--accent);">Médicament 3</strong>
-          <div class="form-row" style="margin-top: 8px;">
-            <div class="form-col"><input id="o_Med3" type="text" value="${escapeHtml(o.M3 || '')}" /></div>
-            <div class="form-col"><input id="o_Pos3" type="text" value="${escapeHtml(o.P3 || '')}" /></div>
-            <div class="form-col"><input id="o_Dur3" type="text" value="${escapeHtml(o.D3 || '')}" /></div>
-          </div>
+        <div style="text-align: center; margin: 16px 0;">
+          <button type="button" class="btn" onclick="addMedication()">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+              <path d="M19 13H13V19H11V13H5V11H11V5H13V11H19V13Z" fill="currentColor"/>
+            </svg>
+            Ajouter un médicament
+          </button>
         </div>
 
         <div class="form-row">
@@ -1756,7 +2093,6 @@ window.openConsultEdit = async function(IDC){
     </div>
   `;
 
-  // Add real-time CIN validation
   const cinInput = root.querySelector('#o_CIN');
   const patientInfo = root.querySelector('#patientInfo');
   
@@ -1779,7 +2115,6 @@ window.openConsultEdit = async function(IDC){
       }
     });
   } else {
-    // For edit mode, show patient info immediately
     if (o.patientCIN) {
       window.electronAPI.getPatientByCIN(o.patientCIN).then(patient => {
         if (patient) {
@@ -1794,6 +2129,7 @@ window.openConsultEdit = async function(IDC){
   root.querySelector('#saveOrdo').onclick = async () => {
     const cin = document.getElementById('o_CIN').value.trim();
     const medecinName = document.getElementById('o_Medecin').value.trim();
+    const consultationRef = document.getElementById('o_ConsultRef').value.trim();
     
     if (!cin) {
       alert('Veuillez saisir le CIN du patient');
@@ -1805,20 +2141,44 @@ window.openConsultEdit = async function(IDC){
       return;
     }
 
+    // Collect medications
+    const medications = [];
+    const medicationSections = root.querySelectorAll('.medication-section');
+    
+    medicationSections.forEach((section, index) => {
+      const medicament = document.getElementById(`o_Med${index+1}`).value.trim();
+      const posologie = document.getElementById(`o_Pos${index+1}`).value.trim();
+      const duree = document.getElementById(`o_Dur${index+1}`).value.trim();
+      
+      if (medicament || posologie || duree) {
+        medications.push({
+          medicament,
+          posologie,
+          duree
+        });
+      }
+    });
+
+    if (medications.length === 0) {
+      alert('Veuillez saisir au moins un médicament');
+      return;
+    }
+
+    // Convert medications to the format expected by the database
+    const medPayload = {};
+    medications.forEach((med, index) => {
+      medPayload[`M${index+1}`] = med.medicament;
+      medPayload[`P${index+1}`] = med.posologie;
+      medPayload[`D${index+1}`] = med.duree;
+    });
+
     const payload = {
       IDR: o.IDR || undefined,
       patientCIN: cin,
       medecinName: medecinName,
-      M1: document.getElementById('o_Med1').value.trim(),
-      P1: document.getElementById('o_Pos1').value.trim(),
-      D1: document.getElementById('o_Dur1').value.trim(),
-      M2: document.getElementById('o_Med2').value.trim(),
-      P2: document.getElementById('o_Pos2').value.trim(),
-      D2: document.getElementById('o_Dur2').value.trim(),
-      M3: document.getElementById('o_Med3').value.trim(),
-      P3: document.getElementById('o_Pos3').value.trim(),
-      D3: document.getElementById('o_Dur3').value.trim(),
-      Remarques: document.getElementById('o_Rem').value.trim()
+      consultation_ref: consultationRef,
+      Remarques: document.getElementById('o_Rem').value.trim(),
+      ...medPayload
     };
 
     try {
@@ -1854,12 +2214,176 @@ window.openConsultEdit = async function(IDC){
     };
   }
 }
-   window.openOrdonnanceDetails = async function(IDR){
+
+// Function to add a new medication field
+window.addMedication = function() {
+  const container = document.getElementById('medicationsContainer');
+  const currentCount = container.querySelectorAll('.medication-section').length;
+  
+  const newIndex = currentCount;
+  const newSection = document.createElement('div');
+  newSection.className = 'medication-section';
+  newSection.setAttribute('data-index', newIndex);
+  newSection.innerHTML = `
+    <div class="medication-header">
+      <strong style="color: var(--accent);">Médicament ${newIndex + 1}</strong>
+      <button type="button" class="remove-medication-btn" onclick="removeMedication(${newIndex})">×</button>
+    </div>
+    <div class="medication-fields">
+      <div class="form-col">
+        <input type="text" id="o_Med${newIndex+1}" placeholder="Nom du médicament" />
+      </div>
+      <div class="form-col">
+        <input type="text" id="o_Pos${newIndex+1}" placeholder="Posologie" />
+      </div>
+      <div class="form-col">
+        <input type="text" id="o_Dur${newIndex+1}" placeholder="Durée du traitement" />
+      </div>
+      <div class="form-col"></div>
+    </div>
+  `;
+  
+  container.appendChild(newSection);
+};
+
+// Function to remove a medication field
+window.removeMedication = function(index) {
+  const section = document.querySelector(`.medication-section[data-index="${index}"]`);
+  if (section) {
+    section.remove();
+    
+    // Re-index remaining sections
+    const remainingSections = document.querySelectorAll('.medication-section');
+    remainingSections.forEach((section, newIndex) => {
+      section.setAttribute('data-index', newIndex);
+      const header = section.querySelector('.medication-header strong');
+      header.textContent = `Médicament ${newIndex + 1}`;
+      
+      // Update IDs of input fields
+      const medicamentInput = section.querySelector('input[type="text"]:nth-child(1)');
+      const posologieInput = section.querySelector('input[type="text"]:nth-child(2)');
+      const dureeInput = section.querySelector('input[type="text"]:nth-child(3)');
+      
+      if (medicamentInput) medicamentInput.id = `o_Med${newIndex+1}`;
+      if (posologieInput) posologieInput.id = `o_Pos${newIndex+1}`;
+      if (dureeInput) dureeInput.id = `o_Dur${newIndex+1}`;
+      
+      // Update remove button onclick
+      const removeButtons = section.querySelectorAll('.remove-medication-btn');
+      removeButtons.forEach(btn => {
+        btn.setAttribute('onclick', `removeMedication(${newIndex})`);
+      });
+    });
+  }
+};
+
+// Add consultation selector function
+window.openConsultationSelector = function() {
+  const root = $('modalRoot');
+  const currentModal = root.querySelector('.modal-backdrop');
+  
+  if (!currentModal) return;
+  
+  // Create consultation selector modal
+  const selectorModal = document.createElement('div');
+  selectorModal.className = 'modal-backdrop';
+  selectorModal.style.zIndex = '10001';
+  selectorModal.innerHTML = `
+    <div class="modal" style="max-width: 800px;">
+      <h3>Sélectionner une Consultation</h3>
+      <div style="margin-bottom: 16px;">
+        <input type="text" id="consultSearch" placeholder="Rechercher par référence, patient..." 
+               style="width: 100%; padding: 8px; border: 1px solid #ccc; border-radius: 4px;" />
+      </div>
+      <div style="max-height: 400px; overflow-y: auto;">
+        <table class="table">
+          <thead>
+            <tr>
+              <th>Référence</th>
+              <th>Patient</th>
+              <th>Date</th>
+              <th>Médecin</th>
+              <th>Action</th>
+            </tr>
+          </thead>
+          <tbody id="consultSelectorBody">
+            ${consultationsCache.map(c => {
+              const p = patientsCache.find(x => x.IDP === c.IDP) || {};
+              return `
+                <tr>
+                  <td><strong>${escapeHtml(c.consultation_ref || 'N/A')}</strong></td>
+                  <td>${escapeHtml(p.Nom || '')} ${escapeHtml(p.Prenom || '')}</td>
+                  <td>${c.DateCreation ? new Date(c.DateCreation).toLocaleDateString() : 'N/A'}</td>
+                  <td>${escapeHtml(c.NomMedecin || '')}</td>
+                  <td>
+                    <button class="btn primary" onclick="selectConsultation('${escapeHtml(c.consultation_ref || '')}')">
+                      Sélectionner
+                    </button>
+                  </td>
+                </tr>
+              `;
+            }).join('')}
+          </tbody>
+        </table>
+      </div>
+      <div class="actions" style="margin-top: 16px;">
+        <button class="btn" onclick="closeConsultationSelector()">Annuler</button>
+      </div>
+    </div>
+  `;
+  
+  document.body.appendChild(selectorModal);
+  
+  // Add search functionality
+  const searchInput = selectorModal.querySelector('#consultSearch');
+  searchInput.addEventListener('input', function() {
+    const searchTerm = this.value.toLowerCase();
+    const rows = selectorModal.querySelectorAll('#consultSelectorBody tr');
+    
+    rows.forEach(row => {
+      const text = row.textContent.toLowerCase();
+      row.style.display = text.includes(searchTerm) ? '' : 'none';
+    });
+  });
+};
+
+window.selectConsultation = function(consultRef) {
+  const consultRefInput = document.getElementById('o_ConsultRef');
+  if (consultRefInput) {
+    consultRefInput.value = consultRef;
+  }
+  closeConsultationSelector();
+};
+
+window.closeConsultationSelector = function() {
+  const selectorModal = document.querySelector('.modal-backdrop[style*="z-index: 10001"]');
+  if (selectorModal) {
+    selectorModal.remove();
+  }
+};
+
+window.openOrdonnanceDetails = async function(IDR){
   const o = (await window.electronAPI.getOrdonnanceById(Number(IDR))) || null;
   if(!o) return alert('Ordonnance introuvable');
   
   const p = patientsCache.find(x=>x.IDP===o.IDP) || {};
   const c = consultationsCache.find(x=>x.IDC===o.IDC) || {};
+  
+  // Collect medications from both old and new formats
+  const medications = [];
+  for (let i = 1; i <= 10; i++) {
+    const med = o[`M${i}`] || o[`Medicament${i}`];
+    const pos = o[`P${i}`] || o[`Posologie${i}`];
+    const dur = o[`D${i}`] || o[`Duree${i}`];
+    
+    if (med || pos || dur) {
+      medications.push({
+        medicament: med,
+        posologie: pos,
+        duree: dur
+      });
+    }
+  }
   
   const root = $('modalRoot'); 
   root.style.display='block';
@@ -1877,30 +2401,19 @@ window.openConsultEdit = async function(IDC){
           <div>
             <p><strong>Date consultation:</strong> ${escapeHtml(c.DateCreation ? new Date(c.DateCreation).toLocaleDateString() : 'N/A')}</p>
             <p><strong>N° Consultation:</strong> ${o.IDC || 'N/A'}</p>
+            <p><strong>Référence Consultation:</strong> <span class="pill">${escapeHtml(o.consultation_ref || 'Non liée')}</span></p>
           </div>
         </div>
 
         <div style="margin: 16px 0;">
           <strong style="color: var(--accent); font-size: 16px;">Médicaments prescrits:</strong>
           <div style="margin-top: 12px;">
-            ${o.Medicament1 ? `
+            ${medications.map((med, index) => `
               <div style="padding: 12px; background: #f8fafc; border-radius: 6px; margin-bottom: 8px;">
-                <strong>${escapeHtml(o.Medicament1)}</strong><br>
-                <span class="small">Posologie: ${escapeHtml(o.Posologie1)} - Durée: ${escapeHtml(o.Duree1)}</span>
+                <strong>${escapeHtml(med.medicament)}</strong><br>
+                <span class="small">Posologie: ${escapeHtml(med.posologie)} - Durée: ${escapeHtml(med.duree)}</span>
               </div>
-            ` : ''}
-            ${o.Medicament2 ? `
-              <div style="padding: 12px; background: #f8fafc; border-radius: 6px; margin-bottom: 8px;">
-                <strong>${escapeHtml(o.Medicament2)}</strong><br>
-                <span class="small">Posologie: ${escapeHtml(o.Posologie2)} - Durée: ${escapeHtml(o.Duree2)}</span>
-              </div>
-            ` : ''}
-            ${o.Medicament3 ? `
-              <div style="padding: 12px; background: #f8fafc; border-radius: 6px; margin-bottom: 8px;">
-                <strong>${escapeHtml(o.Medicament3)}</strong><br>
-                <span class="small">Posologie: ${escapeHtml(o.Posologie3)} - Durée: ${escapeHtml(o.Duree3)}</span>
-              </div>
-            ` : ''}
+            `).join('')}
           </div>
         </div>
 
@@ -1927,7 +2440,6 @@ window.openConsultEdit = async function(IDC){
     const doc = new jsPDF();
     let y = 10;
     
-    // Header
     doc.setFontSize(16);
     doc.text('ORDONNANCE MÉDICALE', 105, y, { align: 'center' });
     y += 15;
@@ -1937,7 +2449,11 @@ window.openConsultEdit = async function(IDC){
     doc.text(`Date: ${new Date().toLocaleDateString()}`, 150, y);
     y += 10;
     
-    // Patient info
+    if (o.consultation_ref) {
+      doc.text(`Référence Consultation: ${o.consultation_ref}`, 20, y);
+      y += 6;
+    }
+    
     doc.text(`Patient: ${p.Nom || ''} ${p.Prenom || ''}`, 20, y);
     y += 6;
     doc.text(`CIN: ${p.CIN || ''}`, 20, y);
@@ -1945,20 +2461,14 @@ window.openConsultEdit = async function(IDC){
     doc.text(`Médecin: ${c.NomMedecin || ''}`, 20, y);
     y += 15;
     
-    // Medications
     doc.setFontSize(12);
     doc.text('MÉDICAMENTS PRESCRITS:', 20, y);
     y += 10;
     
     doc.setFontSize(10);
-    [1, 2, 3].forEach(i => {
-      const med = o[`Medicament${i}`];
-      const pos = o[`Posologie${i}`];
-      const dur = o[`Duree${i}`];
-      if (med) {
-        doc.text(`• ${med} - ${pos} - ${dur}`, 25, y);
-        y += 6;
-      }
+    medications.forEach(med => {
+      doc.text(`• ${med.medicament} - ${med.posologie} - ${med.duree}`, 25, y);
+      y += 6;
     });
     
     y += 10;
@@ -1972,7 +2482,6 @@ window.openConsultEdit = async function(IDC){
       });
     }
     
-    // Footer
     y += 15;
     doc.text('Signature et cachet du médecin:', 20, y);
     y += 20;
@@ -1982,47 +2491,53 @@ window.openConsultEdit = async function(IDC){
   };
 };
 
-   window.openOrdonnanceEdit = async function(IDR){
+window.openOrdonnanceEdit = async function(IDR){
   const o = await window.electronAPI.getOrdonnanceById(Number(IDR));
   if (!o) {
     alert('Ordonnance introuvable');
     return;
   }
   
-  // Get patient CIN for the edit form
   const p = patientsCache.find(x => x.IDP === o.IDP) || {};
+  const c = consultationsCache.find(x => x.IDC === o.IDC);
   
   const ordonnanceData = {
     IDR: o.IDR,
     patientCIN: p.CIN || '',
-    medecinName: '', // Will be filled from consultation
-    M1: o.Medicament1 || '',
-    P1: o.Posologie1 || '',
-    D1: o.Duree1 || '',
-    M2: o.Medicament2 || '',
-    P2: o.Posologie2 || '',
-    D2: o.Duree2 || '',
-    M3: o.Medicament3 || '',
-    P3: o.Posologie3 || '',
-    D3: o.Duree3 || '',
+    medecinName: c && c.NomMedecin ? c.NomMedecin : '',
+    consultation_ref: o.consultation_ref || '',
     Remarques: o.Remarques || ''
   };
   
-  // Try to get doctor name from consultation
-  const c = consultationsCache.find(x => x.IDC === o.IDC);
-  if (c && c.NomMedecin) {
-    ordonnanceData.medecinName = c.NomMedecin;
+  // Convert old format to new format for medications
+  ordonnanceData.medications = [];
+  for (let i = 1; i <= 10; i++) {
+    const med = o[`M${i}`] || o[`Medicament${i}`];
+    const pos = o[`P${i}`] || o[`Posologie${i}`];
+    const dur = o[`D${i}`] || o[`Duree${i}`];
+    
+    if (med || pos || dur) {
+      ordonnanceData.medications.push({
+        medicament: med || '',
+        posologie: pos || '',
+        duree: dur || ''
+      });
+    }
+  }
+  
+  // Ensure we have at least 3 medication slots
+  while (ordonnanceData.medications.length < 3) {
+    ordonnanceData.medications.push({ medicament: '', posologie: '', duree: '' });
   }
   
   openOrdonnanceModal(ordonnanceData);
 };
 
-    async function deleteOrdonnance(IDR){
-      if(!confirm('Supprimer ordonnance ?')) return;
-      try{ await window.electronAPI.deleteOrdonnance(Number(IDR)); ordonnancesCache = await window.electronAPI.getOrdonnances(); renderOrdonnancesTable(); alert('Supprimé'); }
-      catch(e){ console.error(e); alert('Erreur suppression'); }
-    }
-
+async function deleteOrdonnance(IDR){
+  if(!confirm('Supprimer ordonnance ?')) return;
+  try{ await window.electronAPI.deleteOrdonnance(Number(IDR)); ordonnancesCache = await window.electronAPI.getOrdonnances(); renderOrdonnancesTable(); alert('Supprimé'); }
+  catch(e){ console.error(e); alert('Erreur suppression'); }
+}
     /* ===================== SUIVI DOCUMENTS ===================== */
     function renderSuiviPage(){
       $('pageTitle').textContent = 'Suivi Documents';
@@ -2097,7 +2612,6 @@ window.openConsultEdit = async function(IDC){
           Observation: document.getElementById('s_Obs').value.trim()
         };
 
-        // read files if any
         const f1 = document.getElementById('s_File1');
         const f2 = document.getElementById('s_File2');
         try{
@@ -2226,6 +2740,9 @@ window.openConsultEdit = async function(IDC){
     window.openPatientEditModal = openPatientEditModal;
     window.openConsultEdit = openConsultEdit;
     window.openConsultDetails = openConsultDetails;
+    window.copyConsultationRef = copyConsultationRef;
+    window.openConsultationSelector = openConsultationSelector;
+    window.selectConsultation = selectConsultation;
 
   </script>
 </body>

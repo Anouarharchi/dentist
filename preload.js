@@ -16,7 +16,7 @@ contextBridge.exposeInMainWorld('electronAPI', {
   getPatients: () => ipcRenderer.invoke('get-patients'),
   addPatient: (p) => ipcRenderer.invoke('add-patient', p),
   updatePatient: (p) => ipcRenderer.invoke('update-patient', p), // <-- هذا كان ناقص
-getPatientForDoc: (idp) => ipcRenderer.invoke('get-patient-for-doc', idp),
+  getPatientForDoc: (id) => ipcRenderer.invoke('get-patient-for-doc', id),
 
   // ---------------------------
   // Appointments

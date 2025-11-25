@@ -3,32 +3,47 @@ const path = require('path');
 
 const dbPath = path.join(__dirname, 'db', 'clinic.db');
 const db = new sqlite3.Database(dbPath);
+
 // ADD THESE LINES TO PREVENT SQLITE_BUSY ERRORS:
 db.configure("busyTimeout", 5000); // 5 second timeout
 db.exec("PRAGMA journal_mode = WAL;", (err) => {
   if (err) console.error("Failed to set WAL mode:", err);
   else console.log("WAL mode enabled");
 });
-// ===============================
-// 🧱 Check & Create HistoriqueDate Column
-// ===============================
-db.serialize(() => {
-  db.get("PRAGMA table_info(HistoriqueDate)", (err) => {
-    if (err) return console.error(err);
 
-    db.all("PRAGMA table_info(HistoriqueDate)", (err, columns) => {
-      if (err) return console.error(err);
+// ===============================
+// 🧱 Check & Create Missing Columns
+// ===============================
+function checkAndCreateColumns() {
+  return new Promise((resolve, reject) => {
+    // Check if consultation_ref column exists in Ordonnance table
+    db.all("PRAGMA table_info(Ordonnance)", (err, columns) => {
+      if (err) {
+        console.error("Error checking Ordonnance table:", err);
+        reject(err);
+        return;
+      }
 
-      const hasAction = columns.some(col => col.name === "Action");
-      if (!hasAction) {
-        db.run("ALTER TABLE HistoriqueDate ADD COLUMN Action TEXT", (err) => {
-          if (err) console.error("Erreur ajout colonne Action:", err);
-          else console.log("✅ Colonne Action ajoutée à HistoriqueDate");
+      const hasConsultationRef = columns.some(col => col.name === "consultation_ref");
+      
+      if (!hasConsultationRef) {
+        console.log("Adding consultation_ref column to Ordonnance table...");
+        db.run("ALTER TABLE Ordonnance ADD COLUMN consultation_ref TEXT", (alterErr) => {
+          if (alterErr) {
+            console.error("Error adding consultation_ref column:", alterErr);
+            reject(alterErr);
+          } else {
+            console.log("✅ consultation_ref column added to Ordonnance table");
+            resolve();
+          }
         });
+      } else {
+        console.log("✅ consultation_ref column already exists in Ordonnance table");
+        resolve();
       }
     });
   });
-});
+}
 
 // ===============================
 // 🧱 Create Tables If Not Exists
@@ -60,7 +75,7 @@ db.serialize(() => {
     IDC INTEGER PRIMARY KEY AUTOINCREMENT,
     IDP INTEGER, CIN TEXT, Motif TEXT, Diagnostic TEXT,
     Observations TEXT, Remarques TEXT, NomMedecin TEXT,
-    PiècesJointes_FileData BLOB, PiècesJointes_FileName TEXT, PiècesJointes_FileType TEXT,
+    PiècesJointes_FileData BLOB, PiècesJointes_FileName TEXT, PiècesJointes_FileType TEXT,consultation_ref TEXT,
     ConsultationID TEXT UNIQUE,
     DateCreation DATETIME DEFAULT CURRENT_TIMESTAMP,  
     FOREIGN KEY(IDP) REFERENCES Patients(IDP)
@@ -73,6 +88,7 @@ db.serialize(() => {
     Medicament2 TEXT, Posologie2 TEXT, Duree2 TEXT,
     Medicament3 TEXT, Posologie3 TEXT, Duree3 TEXT,
     Remarques TEXT,
+    consultation_ref TEXT,
     FOREIGN KEY(IDC) REFERENCES Consultation(IDC),
     FOREIGN KEY(IDP) REFERENCES Patients(IDP)
   )`);
@@ -113,6 +129,13 @@ db.serialize(() => {
     ID_App INTEGER PRIMARY KEY AUTOINCREMENT,
     DateApp TEXT, Fournisseur TEXT, IFF TEXT, Produit TEXT, Quantite INTEGER, PrixUnitaire REAL
   )`);
+
+  // Check and create missing columns
+  checkAndCreateColumns().then(() => {
+    console.log("✅ Database schema check completed");
+  }).catch(err => {
+    console.error("❌ Database schema check failed:", err);
+  });
 
   // Default admin
   db.get(`SELECT * FROM Personnel WHERE Login = 'admin'`, (err, row) => {
@@ -233,23 +256,68 @@ function getAppointmentById(IDRv) {
 }
 
 function addAppointment(appt) {
-  return new Promise((resolve, reject) => {
-    const sql = `INSERT INTO RendezVous 
-      (IDP, DateRv, HeureRv, Statut, TypePatient, NomPrenom, Email, CIN)
-      VALUES (?, ?, ?, ?, ?, ?, ?, ?)`;
-    const params = [
-      appt.IDP || null,
-      appt.DateRv || new Date().toISOString().split('T')[0],
-      appt.HeureRv || "08:00",
-      appt.Statut || "Planifié",
-      appt.TypePatient || "",
-      appt.NomPrenom || "",
-      appt.Email || "",
-      appt.CIN || ""
-    ];
-    db.run(sql, params, function(err) {
-      if (err) reject(err); else resolve(this.lastID);
-    });
+  return new Promise(async (resolve, reject) => {
+    try {
+      let IDP = appt.IDP || null;
+      
+      // If we have patient information but no IDP, try to find the patient
+      if (!IDP && (appt.CIN || appt.NomPrenom)) {
+        try {
+          // Try to find patient by CIN first
+          if (appt.CIN) {
+            const patientByCIN = await getPatientByCIN(appt.CIN);
+            if (patientByCIN) {
+              IDP = patientByCIN.IDP;
+              console.log('Found patient by CIN:', patientByCIN.Nom, patientByCIN.Prenom, 'IDP:', IDP);
+            }
+          }
+          
+          // If still no IDP, try to find by name
+          if (!IDP && appt.NomPrenom) {
+            const allPatients = await getPatients();
+            const patientByName = allPatients.find(p => 
+              `${p.Nom} ${p.Prenom}`.toLowerCase().includes(appt.NomPrenom.toLowerCase()) ||
+              appt.NomPrenom.toLowerCase().includes(`${p.Nom} ${p.Prenom}`.toLowerCase())
+            );
+            if (patientByName) {
+              IDP = patientBconsultation_refyName.IDP;
+              console.log('Found patient by name:', patientByName.Nom, patientByName.Prenom, 'IDP:', IDP);
+            }
+          }
+        } catch (lookupError) {
+          console.warn('Patient lookup failed, continuing with null IDP:', lookupError);
+        }
+      }
+
+      const sql = `INSERT INTO RendezVous 
+        (IDP, DateRv, HeureRv, Statut, TypePatient, NomPrenom, Email, CIN)
+        VALUES (?, ?, ?, ?, ?, ?, ?, ?)`;
+      const params = [
+        IDP,
+        appt.DateRv || new Date().toISOString().split('T')[0],
+        appt.HeureRv || "08:00",
+        appt.Statut || "Planifié",
+        appt.TypePatient || "",
+        appt.NomPrenom || "",
+        appt.Email || "",
+        appt.CIN || ""
+      ];
+      
+      console.log('Inserting appointment with IDP:', IDP, 'Params:', params);
+      
+      db.run(sql, params, function(err) {
+        if (err) {
+          console.error('Error inserting appointment:', err);
+          reject(err);
+        } else {
+          console.log('Appointment created successfully, ID:', this.lastID);
+          resolve(this.lastID);
+        }
+      });
+    } catch (error) {
+      console.error('Error in addAppointment:', error);
+      reject(error);
+    }
   });
 }
 
@@ -358,7 +426,7 @@ function deletePersonnel(id) {
 // ======================================
 function getConsultations() {
   return new Promise((resolve, reject) => {
-    db.all("SELECT * FROM Consultation", [], (err, rows) => {
+    db.all("SELECT * FROM Consultation ORDER BY IDC DESC", [], (err, rows) => {
       if (err) reject(err); else resolve(rows);
     });
   });
@@ -374,18 +442,17 @@ function getConsultationById(IDC) {
   });
 }
 
-
 function addConsultation(c) {
   return new Promise((resolve, reject) => {
     const sql = `INSERT INTO Consultation 
       (IDP, CIN, Motif, Diagnostic, Observations, Remarques, NomMedecin,
-       PiècesJointes_FileData, PiècesJointes_FileName, PiècesJointes_FileType)
-      VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`;
+       PiècesJointes_FileData, PiècesJointes_FileName, PiècesJointes_FileType, consultation_ref, DateCreation)
+      VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, datetime('now'))`;
 
     const params = [
       c.IDP, c.CIN, c.Motif, c.Diagnostic, c.Observations,
       c.Remarques, c.NomMedecin, c.PiècesJointes_FileData,
-      c.PiècesJointes_FileName, c.PiècesJointes_FileType
+      c.PiècesJointes_FileName, c.PiècesJointes_FileType, c.consultation_ref 
     ];
 
     db.run(sql, params, function(err) {
@@ -396,7 +463,7 @@ function addConsultation(c) {
 
 function getConsultationsByPatient(IDP) {
   return new Promise((resolve, reject) => {
-    db.all("SELECT * FROM Consultation WHERE IDP=?", [IDP], (err, rows) => {
+    db.all("SELECT * FROM Consultation WHERE IDP=? ORDER BY IDC DESC", [IDP], (err, rows) => {
       if (err) reject(err); else resolve(rows);
     });
   });
@@ -407,12 +474,12 @@ function updateConsultation(c) {
     const sql = `UPDATE Consultation SET 
       IDP=?, CIN=?, Motif=?, Diagnostic=?, Observations=?, 
       Remarques=?, NomMedecin=?, PiècesJointes_FileData=?,
-      PiècesJointes_FileName=?, PiècesJointes_FileType=? WHERE IDC=?`;
+      PiècesJointes_FileName=?, PiècesJointes_FileType=?, consultation_ref=? WHERE IDC=?`;
 
     const params = [
       c.IDP, c.CIN, c.Motif, c.Diagnostic, c.Observations,
       c.Remarques, c.NomMedecin, c.PiècesJointes_FileData,
-      c.PiècesJointes_FileName, c.PiècesJointes_FileType, c.IDC
+      c.PiècesJointes_FileName, c.PiècesJointes_FileType, c.consultation_ref, c.IDC
     ];
 
     db.run(sql, params, function(err) {
@@ -429,15 +496,13 @@ function deleteConsultation(IDC) {
   });
 }
 
-
-
 // ======================================
-// 📌 BASIC ORDONNANCE FUNCTIONS (Add these)
+// 📌 BASIC ORDONNANCE FUNCTIONS
 // ======================================
 
 function getOrdonnances() {
   return new Promise((resolve, reject) => {
-    db.all("SELECT * FROM Ordonnance", [], (err, rows) => {
+    db.all("SELECT * FROM Ordonnance ORDER BY IDR DESC", [], (err, rows) => {
       if (err) reject(err); else resolve(rows);
     });
   });
@@ -456,16 +521,16 @@ function addOrdonnance(data) {
     INSERT INTO Ordonnance
     (IDC, IDP, Medicament1, Posologie1, Duree1,
      Medicament2, Posologie2, Duree2,
-     Medicament3, Posologie3, Duree3, Remarques)
-    VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+     Medicament3, Posologie3, Duree3, Remarques, consultation_ref)
+    VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
   `;
   return new Promise((resolve, reject) => {
     db.run(sql, [
       data.IDC, data.IDP,
-      data.M1, data.P1, data.D1,
-      data.M2, data.P2, data.D2,
-      data.M3, data.P3, data.D3,
-      data.Remarques
+      data.M1 || '', data.P1 || '', data.D1 || '',
+      data.M2 || '', data.P2 || '', data.D2 || '',
+      data.M3 || '', data.P3 || '', data.D3 || '',
+      data.Remarques || '', data.consultation_ref || null
     ], function (err) {
       if (err) reject(err); else resolve({ IDR: this.lastID });
     });
@@ -477,13 +542,14 @@ function updateOrdonnance(o) {
     const sql = `UPDATE Ordonnance SET 
       IDC=?, IDP=?, Medicament1=?, Posologie1=?, Duree1=?,
       Medicament2=?, Posologie2=?, Duree2=?,
-      Medicament3=?, Posologie3=?, Duree3=?, Remarques=? WHERE IDR=?`;
+      Medicament3=?, Posologie3=?, Duree3=?, Remarques=?, consultation_ref=? WHERE IDR=?`;
 
     const params = [
-      o.IDC, o.IDP, o.Medicament1, o.Posologie1, o.Duree1,
-      o.Medicament2, o.Posologie2, o.Duree2,
-      o.Medicament3, o.Posologie3, o.Duree3,
-      o.Remarques, o.IDR
+      o.IDC, o.IDP, 
+      o.Medicament1 || '', o.Posologie1 || '', o.Duree1 || '',
+      o.Medicament2 || '', o.Posologie2 || '', o.Duree2 || '',
+      o.Medicament3 || '', o.Posologie3 || '', o.Duree3 || '',
+      o.Remarques || '', o.consultation_ref || null, o.IDR
     ];
 
     db.run(sql, params, function(err) {
@@ -503,7 +569,7 @@ function deleteOrdonnance(IDR) {
           if (err.code === 'SQLITE_BUSY' && retries < maxRetries) {
             retries++;
             console.log(`Database busy, retrying delete (${retries}/${maxRetries})...`);
-            setTimeout(attemptDelete, 100 * retries); // Exponential backoff
+            setTimeout(attemptDelete, 100 * retries);
             return;
           }
           reject(err);
@@ -516,6 +582,7 @@ function deleteOrdonnance(IDR) {
     attemptDelete();
   });
 }
+
 // ======================================
 // 📌 ENHANCED ORDONNANCE LOGIC
 // ======================================
@@ -524,9 +591,10 @@ function deleteOrdonnance(IDR) {
  * Get or create a consultation for a patient's current visit
  * @param {string} patientCIN - Patient's CIN
  * @param {string} medecinName - Doctor's name creating the prescription
+ * @param {string} consultationRef - Optional consultation reference to link
  * @returns {Promise} Consultation ID
  */
-function getOrCreateCurrentConsultation(patientCIN, medecinName) {
+function getOrCreateCurrentConsultation(patientCIN, medecinName, consultationRef = null) {
   return new Promise(async (resolve, reject) => {
     try {
       // 1. Find patient by CIN
@@ -535,13 +603,35 @@ function getOrCreateCurrentConsultation(patientCIN, medecinName) {
         return reject(new Error(`Patient avec CIN ${patientCIN} non trouvé`));
       }
 
+      // If consultation reference is provided, try to find that specific consultation
+      if (consultationRef) {
+        try {
+          const existingConsultation = await new Promise((resolve, reject) => {
+            db.get(
+              `SELECT * FROM Consultation WHERE consultation_ref = ? AND IDP = ?`,
+              [consultationRef, patient.IDP],
+              (err, row) => {
+                if (err) reject(err); else resolve(row);
+              }
+            );
+          });
+
+          if (existingConsultation) {
+            return resolve(existingConsultation.IDC);
+          }
+        } catch (error) {
+          console.log('Consultation reference not found, creating new consultation');
+          // Continue to create new consultation if reference not found
+        }
+      }
+
       const today = new Date().toISOString().split('T')[0];
       
       // 2. Look for today's consultation for this patient
       const existingConsultation = await new Promise((resolve, reject) => {
         db.get(
           `SELECT * FROM Consultation 
-           WHERE IDP = ? AND date(IDC) = date(?) 
+           WHERE IDP = ? AND date(DateCreation) = date(?) 
            ORDER BY IDC DESC LIMIT 1`,
           [patient.IDP, today],
           (err, row) => {
@@ -562,7 +652,8 @@ function getOrCreateCurrentConsultation(patientCIN, medecinName) {
           Diagnostic: "",
           Observations: "",
           Remarques: `Consultation du ${today}`,
-          NomMedecin: medecinName
+          NomMedecin: medecinName,
+          consultation_ref: consultationRef || generateConsultationRef()
         };
 
         const newConsultationId = await addConsultation(newConsultation);
@@ -592,7 +683,8 @@ function addOrdonnanceByCIN(data) {
       // Get or create consultation for this patient
       const consultationId = await getOrCreateCurrentConsultation(
         data.patientCIN, 
-        data.medecinName
+        data.medecinName,
+        data.consultation_ref
       );
 
       // Get patient ID for the prescription
@@ -603,16 +695,31 @@ function addOrdonnanceByCIN(data) {
         INSERT INTO Ordonnance
         (IDC, IDP, Medicament1, Posologie1, Duree1,
          Medicament2, Posologie2, Duree2,
-         Medicament3, Posologie3, Duree3, Remarques)
-        VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+         Medicament3, Posologie3, Duree3, Remarques, consultation_ref)
+        VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
       `;
 
+      // Map medication data properly
+      const medicationData = {
+        M1: data.M1 || data.medicament1 || '',
+        P1: data.P1 || data.posologie1 || '',
+        D1: data.D1 || data.duree1 || '',
+        M2: data.M2 || data.medicament2 || '',
+        P2: data.P2 || data.posologie2 || '',
+        D2: data.D2 || data.duree2 || '',
+        M3: data.M3 || data.medicament3 || '',
+        P3: data.P3 || data.posologie3 || '',
+        D3: data.D3 || data.duree3 || ''
+      };
+
       db.run(sql, [
-        consultationId, patient.IDP,
-        data.M1, data.P1, data.D1,
-        data.M2, data.P2, data.D2,
-        data.M3, data.P3, data.D3,
-        data.Remarques
+        consultationId, 
+        patient.IDP,
+        medicationData.M1, medicationData.P1, medicationData.D1,
+        medicationData.M2, medicationData.P2, medicationData.D2,
+        medicationData.M3, medicationData.P3, medicationData.D3,
+        data.Remarques || '', 
+        data.consultation_ref || null
       ], function (err) {
         if (err) reject(err); 
         else resolve({ 
@@ -648,15 +755,24 @@ function updateOrdonnanceByCIN(data) {
       const sql = `UPDATE Ordonnance SET 
         IDP=?, Medicament1=?, Posologie1=?, Duree1=?,
         Medicament2=?, Posologie2=?, Duree2=?,
-        Medicament3=?, Posologie3=?, Duree3=?, Remarques=? 
+        Medicament3=?, Posologie3=?, Duree3=?, Remarques=?, consultation_ref=?
         WHERE IDR=?`;
 
+      // Handle both old and new medication field names
       const params = [
         patient.IDP,
-        data.Medicament1, data.Posologie1, data.Duree1,
-        data.Medicament2, data.Posologie2, data.Duree2,
-        data.Medicament3, data.Posologie3, data.Duree3,
-        data.Remarques, data.IDR
+        data.Medicament1 || data.M1 || '', 
+        data.Posologie1 || data.P1 || '', 
+        data.Duree1 || data.D1 || '',
+        data.Medicament2 || data.M2 || '', 
+        data.Posologie2 || data.P2 || '', 
+        data.Duree2 || data.D2 || '',
+        data.Medicament3 || data.M3 || '', 
+        data.Posologie3 || data.P3 || '', 
+        data.Duree3 || data.D3 || '',
+        data.Remarques || '', 
+        data.consultation_ref || null,
+        data.IDR
       ];
 
       db.run(sql, params, function(err) {
@@ -684,7 +800,7 @@ function getOrdonnancesByPatientCIN(patientCIN) {
       const sql = `
         SELECT o.*, c.DateCreation as DateConsultation, c.NomMedecin
         FROM Ordonnance o
-        JOIN Consultation c ON o.IDC = c.IDC
+        LEFT JOIN Consultation c ON o.IDC = c.IDC
         WHERE o.IDP = ?
         ORDER BY c.DateCreation DESC
       `;
@@ -728,74 +844,9 @@ function getPatientLatestConsultation(patientCIN) {
   });
 }
 
-// ======================================
-// 📌 HONORAIRES
-// ======================================
-function addHonoraire(h) {
-  return new Promise((resolve, reject) => {
-    const sql = `INSERT INTO Honoraire (IDC, IDP, Montant, TypePrestation)
-                 VALUES (?, ?, ?, ?)`;
-
-    db.run(sql, [h.IDC, h.IDP, h.Montant, h.TypePrestation], function(err) {
-      if (err) reject(err); else resolve(this.lastID);
-    });
-  });
-}
-
-function getAllHonoraires() {
-  return new Promise((resolve, reject) => {
-    db.all("SELECT Montant FROM Honoraire", [], (err, rows) => {
-      if (err) reject(err); else resolve(rows);
-    });
-  });
-}
-
-// ======================================
-// 📌 REGLEMENT
-// ======================================
-function addReglement(r) {
-  return new Promise((resolve, reject) => {
-    const sql = `INSERT INTO Reglement
-      (IDP, DateReglement, Montant, Tel, Email, Adresse, ModePaiement,
-      Solde, Ville, CodePostal, Statut, Remarques, NomMedecin, Allergies,
-      PiècesJointes_FileData, PiècesJointes_FileName, PiècesJointes_FileType)
-      VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`;
-
-    const params = [
-      r.IDP, r.DateReglement, r.Montant, r.Tel, r.Email, r.Adresse,
-      r.ModePaiement, r.Solde, r.Ville, r.CodePostal, r.Statut,
-      r.Remarques, r.NomMedecin, r.Allergies,
-      r.PiècesJointes_FileData, r.PiècesJointes_FileName, r.PiècesJointes_FileType
-    ];
-
-    db.run(sql, params, function(err) {
-      if (err) reject(err); else resolve(this.lastID);
-    });
-  });
-}
-
-// ======================================
-// 📌 HISTORIQUE
-// ======================================
-function addHistorique(entry) {
-  return new Promise((resolve, reject) => {
-    const sql = `INSERT INTO HistoriqueDate (Mat, Date_E, Action)
-                 VALUES (?, ?, ?)`;
-    db.run(sql, [entry.Mat, entry.Date_E, entry.Action], function(err) {
-      if (err) reject(err); else resolve(this.lastID);
-    });
-  });
-}
-
-function addHistoriqueDate(log) {
-  return new Promise((resolve, reject) => {
-    const sql = `INSERT INTO HistoriqueDate (Date_E, Mat, Action)
-                 VALUES (?, ?, ?)`;
-    const params = [log.Date_E, log.Mat, log.Action || ""];
-    db.run(sql, params, function(err) {
-      if (err) reject(err); else resolve(this.lastID);
-    });
-  });
+// Helper function to generate consultation reference
+function generateConsultationRef() {
+  return 'CONS-' + Date.now() + '-' + Math.random().toString(36).substr(2, 5).toUpperCase();
 }
 
 // ======================================
@@ -839,12 +890,6 @@ module.exports = {
   deletePersonnel,
   addConsultation,
   getConsultationsByPatient,
-
-  addHonoraire,
-  addReglement,
-  addHistorique,
-  addHistoriqueDate,
-  getAllHonoraires,
   getAppointmentsBetween,
   getAppointmentById,
   updateAppointment,
@@ -865,7 +910,7 @@ module.exports = {
   getOrdonnancesByPatientCIN,
   getPatientLatestConsultation,
   getOrCreateCurrentConsultation,
-   getOrdonnances,
+  getOrdonnances,
   getOrdonnanceById,
   addOrdonnance,
   updateOrdonnance,
