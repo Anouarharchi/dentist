@@ -161,13 +161,7 @@
       background: rgba(239, 68, 68, 0.2);
     }
     
-    .sidebar-footer {
-      font-size: 11px;
-      color: rgba(255, 255, 255, 0.5);
-      padding: 12px;
-      text-align: center;
-      border-top: 1px solid rgba(255, 255, 255, 0.1);
-    }
+
 
     .main {
       flex: 1;
@@ -624,9 +618,7 @@
         padding: 16px 8px;
       }
       
-      .brand-text, .role, .menu-item .text, .logout-btn span, .sidebar-footer {
-        display: none;
-      }
+      
       
       .brand {
         justify-content: center;
@@ -744,7 +736,6 @@
         </svg>
         <span>Se déconnecter</span>
       </button>
-      <div class="sidebar-footer small">Version 1.0 — Local</div>
     </aside>
 
     <main class="main">
@@ -1133,12 +1124,8 @@ window.openPatientDetailsFromAppt = async function(idp) {
         <div class="form-row">
           <div class="form-col">
             <label>Type</label>
-            <select id="m_Type">
-              <option ${appt.TypePatient==='Consultation'?'selected':''}>Consultation</option>
-              <option ${appt.TypePatient==='Soins'?'selected':''}>Soins</option>
-              <option ${appt.TypePatient==='Extraction'?'selected':''}>Extraction</option>
-              <option ${appt.TypePatient==='Controle'?'selected':''}>Contrôle</option>
-            </select>
+            <input type="text" id="m_Type" value="${appt.TypePatient || ''}">
+
           </div>
           <div class="form-col">
             <label>Statut</label>
@@ -1165,7 +1152,7 @@ window.openPatientDetailsFromAppt = async function(idp) {
   const cinInfo = root.querySelector('#cinInfo');
   const patientInfo = root.querySelector('#patientInfo');
 
-  let foundPatientId = null;
+let foundPatientId = appt.IDP || null;
 
   // CIN lookup
   cinInput.addEventListener('input', async () => {
@@ -1980,23 +1967,29 @@ function openOrdonnanceModal(data = null){
     Remarques: ''
   };
 
-  // If editing, convert old format to new format
+  // If editing, convert old format to new format - FIX THIS PART
   if (isEdit && data) {
     o.medications = [];
-    for (let i = 1; i <= 10; i++) {
-      const med = data[`M${i}`] || data[`Medicament${i}`];
-      const pos = data[`P${i}`] || data[`Posologie${i}`];
-      const dur = data[`D${i}`] || data[`Duree${i}`];
+    for (let i = 1; i <= 3; i++) { // CHANGE FROM 10 to 3 since database only has 3 medications
+      const med = data[`Medicament${i}`] || data[`M${i}`] || '';
+      const pos = data[`Posologie${i}`] || data[`P${i}`] || '';
+      const dur = data[`Duree${i}`] || data[`D${i}`] || '';
       
-      if (med || pos || dur) {
-        o.medications.push({
-          medicament: med || '',
-          posologie: pos || '',
-          duree: dur || ''
-        });
-      }
+      o.medications.push({
+        medicament: med,
+        posologie: pos,
+        duree: dur
+      });
     }
     
+    // Ensure we have doctor name when editing
+    o.medecinName = data.NomMedecin || data.medecinName || doctorName;
+    o.patientCIN = data.patientCIN || '';
+    o.consultation_ref = data.consultation_ref || '';
+    o.Remarques = data.Remarques || '';
+  
+  // ... rest of your function
+
     // Ensure we have at least 3 medication slots
     while (o.medications.length < 3) {
       o.medications.push({ medicament: '', posologie: '', duree: '' });

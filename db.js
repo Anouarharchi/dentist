@@ -51,46 +51,92 @@ function checkAndCreateColumns() {
 db.serialize(() => {
   db.run(`CREATE TABLE IF NOT EXISTS Patients (
     IDP INTEGER PRIMARY KEY AUTOINCREMENT,
-    Nom TEXT, Prenom TEXT, CIN TEXT, DateNaissance TEXT,
-    Tel TEXT, Email TEXT, Adresse TEXT, Ville TEXT,
-    Allergies TEXT, Remarques TEXT
+    Nom TEXT,
+    Prenom TEXT,
+    CIN TEXT,
+    DateNaissance TEXT,
+    Tel TEXT,
+    Email TEXT,
+    Adresse TEXT,
+    Ville TEXT,
+    Allergies TEXT,
+    Remarques TEXT
   )`);
 
-  db.run(`CREATE TABLE IF NOT EXISTS RendezVous (
-    IDRv INTEGER PRIMARY KEY AUTOINCREMENT,
-    IDP INTEGER, DateRv TEXT, HeureRv TEXT, Statut TEXT,
-    TypePatient TEXT, NomPrenom TEXT, Email TEXT, CIN TEXT,
-    FOREIGN KEY(IDP) REFERENCES Patients(IDP)
-  )`);
+  db.run(`CREATE TABLE IF NOT EXISTS "RendezVous" (
+	"IDRv"	INTEGER,
+	"IDP"	INTEGER,
+	"DateRv"	TEXT,
+	"HeureRv"	TEXT,
+	"Statut"	TEXT,
+	"TypePatient"	TEXT,
+	"NomPrenom"	TEXT,
+	"Email"	TEXT,
+	"CIN"	TEXT,
+	PRIMARY KEY("IDRv" AUTOINCREMENT),
+	FOREIGN KEY("IDP") REFERENCES "Patients"("IDP")
+)`);
 
   db.run(`CREATE TABLE IF NOT EXISTS Personnel (
     ID INTEGER PRIMARY KEY AUTOINCREMENT,
-    Mie TEXT, Nom TEXT, Prenom TEXT, Tel TEXT, Mail TEXT,
-    Adresse TEXT, Photo_FileData BLOB, Photo_FileName TEXT, Photo_FileType TEXT,
-    Type TEXT, Specialite TEXT, Login TEXT UNIQUE, MotPasse TEXT,
-    DateEntree TEXT, Droit TEXT, CIN TEXT, NbreEntree INTEGER DEFAULT 0
+    Mie TEXT,
+    Nom TEXT,
+    Prenom TEXT,
+    Tel TEXT,
+    Mail TEXT,
+    Adresse TEXT,
+    Photo_FileData BLOB,
+    Photo_FileName TEXT,
+    Photo_FileType TEXT,
+    Type TEXT,
+    Specialite TEXT,
+    Login TEXT UNIQUE,
+    MotPasse TEXT,
+    DateEntree TEXT,
+    Droit TEXT,
+    CIN TEXT,
+    NbreEntree INTEGER DEFAULT 0
   )`);
 
-  db.run(`CREATE TABLE IF NOT EXISTS Consultation (
-    IDC INTEGER PRIMARY KEY AUTOINCREMENT,
-    IDP INTEGER, CIN TEXT, Motif TEXT, Diagnostic TEXT,
-    Observations TEXT, Remarques TEXT, NomMedecin TEXT,
-    PiècesJointes_FileData BLOB, PiècesJointes_FileName TEXT, PiècesJointes_FileType TEXT,consultation_ref TEXT,
-    ConsultationID TEXT UNIQUE,
-    DateCreation DATETIME DEFAULT CURRENT_TIMESTAMP,  
-    FOREIGN KEY(IDP) REFERENCES Patients(IDP)
-  )`);
+  db.run(`CREATE TABLE If NOT EXISTS "Consultation" (
+	"IDC"	INTEGER PRIMARY KEY AUTOINCREMENT,
+	"IDP"	INTEGER,
+	"CIN"	TEXT,
+	"Motif"	TEXT,
+	"Diagnostic"	TEXT,
+	"Observations"	TEXT,
+	"Remarques"	TEXT,
+	"NomMedecin"	TEXT,
+	"PiècesJointes_FileData"	BLOB,
+	"PiècesJointes_FileName"	TEXT,
+	"PiècesJointes_FileType"	TEXT,
+	"consultation_ref"	TEXT UNIQUE,
+	"DateCreation"	TEXT,
+	PRIMARY KEY("IDC" AUTOINCREMENT),
+	FOREIGN KEY("IDP") REFERENCES "Patients"("IDP")
+)`);
 
-  db.run(`CREATE TABLE IF NOT EXISTS Ordonnance (
-    IDR INTEGER PRIMARY KEY AUTOINCREMENT,
-    IDC INTEGER, IDP INTEGER,
-    Medicament1 TEXT, Posologie1 TEXT, Duree1 TEXT,
-    Medicament2 TEXT, Posologie2 TEXT, Duree2 TEXT,
-    Medicament3 TEXT, Posologie3 TEXT, Duree3 TEXT,
-    Remarques TEXT,
-    consultation_ref TEXT,
-    FOREIGN KEY(IDC) REFERENCES Consultation(IDC),
-    FOREIGN KEY(IDP) REFERENCES Patients(IDP)
+  db.run(`CREATE TABLE If NOT EXISTS "Ordonnance" (
+	"IDR"	INTEGER NOT NULL UNIQUE,
+	"IDC"	INTEGER,
+	"IDP"	INTEGER,
+	"Medicament1"	TEXT,
+	"Posologie1"	NUMERIC,
+	"Duree1"	TEXT,
+	"Medicament2"	TEXT,
+	"Posologie2"	TEXT,
+	"Duree2"	TEXT,
+	"Medicament3"	TEXT,
+	"Posologie3"	TEXT,
+	"Duree3"	TEXT,
+	"Remarques"	TEXT,
+	"NomMedecin"	TEXT,
+	"DateCreation"	DATETIME,
+	"consultation_ref"	TEXT,
+	PRIMARY KEY("IDR" AUTOINCREMENT),
+	FOREIGN KEY("IDC") REFERENCES "Consultation"("IDC"),
+	FOREIGN KEY("IDP") REFERENCES "Patients"("IDP"),
+	FOREIGN KEY("consultation_ref") REFERENCES "Consultation"("consultation_ref") ON DELETE CASCADE
   )`);
 
   db.run(`CREATE TABLE IF NOT EXISTS Honoraire (
@@ -516,13 +562,14 @@ function getOrdonnanceById(IDR) {
   });
 }
 
+// FIX addOrdonnance function
 function addOrdonnance(data) {
   const sql = `
     INSERT INTO Ordonnance
     (IDC, IDP, Medicament1, Posologie1, Duree1,
      Medicament2, Posologie2, Duree2,
-     Medicament3, Posologie3, Duree3, Remarques, consultation_ref)
-    VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+     Medicament3, Posologie3, Duree3, Remarques, consultation_ref, NomMedecin, DateCreation)
+    VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, datetime('now'))
   `;
   return new Promise((resolve, reject) => {
     db.run(sql, [
@@ -530,26 +577,32 @@ function addOrdonnance(data) {
       data.M1 || '', data.P1 || '', data.D1 || '',
       data.M2 || '', data.P2 || '', data.D2 || '',
       data.M3 || '', data.P3 || '', data.D3 || '',
-      data.Remarques || '', data.consultation_ref || null
+      data.Remarques || '', 
+      data.consultation_ref || null,
+      data.NomMedecin || ''  // ADD THIS
     ], function (err) {
       if (err) reject(err); else resolve({ IDR: this.lastID });
     });
   });
 }
 
+// FIX updateOrdonnance function
 function updateOrdonnance(o) {
   return new Promise((resolve, reject) => {
     const sql = `UPDATE Ordonnance SET 
       IDC=?, IDP=?, Medicament1=?, Posologie1=?, Duree1=?,
       Medicament2=?, Posologie2=?, Duree2=?,
-      Medicament3=?, Posologie3=?, Duree3=?, Remarques=?, consultation_ref=? WHERE IDR=?`;
+      Medicament3=?, Posologie3=?, Duree3=?, Remarques=?, consultation_ref=?, NomMedecin=? WHERE IDR=?`;
 
     const params = [
       o.IDC, o.IDP, 
       o.Medicament1 || '', o.Posologie1 || '', o.Duree1 || '',
       o.Medicament2 || '', o.Posologie2 || '', o.Duree2 || '',
       o.Medicament3 || '', o.Posologie3 || '', o.Duree3 || '',
-      o.Remarques || '', o.consultation_ref || null, o.IDR
+      o.Remarques || '', 
+      o.consultation_ref || null,
+      o.NomMedecin || '',  // ADD THIS
+      o.IDR
     ];
 
     db.run(sql, params, function(err) {
@@ -695,21 +748,21 @@ function addOrdonnanceByCIN(data) {
         INSERT INTO Ordonnance
         (IDC, IDP, Medicament1, Posologie1, Duree1,
          Medicament2, Posologie2, Duree2,
-         Medicament3, Posologie3, Duree3, Remarques, consultation_ref)
-        VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+         Medicament3, Posologie3, Duree3, Remarques, consultation_ref, NomMedecin, DateCreation)
+        VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, datetime('now'))
       `;
 
-      // Map medication data properly
+      // Map medication data properly - FIXED FIELD MAPPING
       const medicationData = {
-        M1: data.M1 || data.medicament1 || '',
-        P1: data.P1 || data.posologie1 || '',
-        D1: data.D1 || data.duree1 || '',
-        M2: data.M2 || data.medicament2 || '',
-        P2: data.P2 || data.posologie2 || '',
-        D2: data.D2 || data.duree2 || '',
-        M3: data.M3 || data.medicament3 || '',
-        P3: data.P3 || data.posologie3 || '',
-        D3: data.D3 || data.duree3 || ''
+        M1: data.M1 || '',
+        P1: data.P1 || '',
+        D1: data.D1 || '',
+        M2: data.M2 || '',
+        P2: data.P2 || '',
+        D2: data.D2 || '',
+        M3: data.M3 || '',
+        P3: data.P3 || '',
+        D3: data.D3 || ''
       };
 
       db.run(sql, [
@@ -719,7 +772,8 @@ function addOrdonnanceByCIN(data) {
         medicationData.M2, medicationData.P2, medicationData.D2,
         medicationData.M3, medicationData.P3, medicationData.D3,
         data.Remarques || '', 
-        data.consultation_ref || null
+        data.consultation_ref || null,
+        data.medecinName  // ADD DOCTOR NAME
       ], function (err) {
         if (err) reject(err); 
         else resolve({ 
@@ -755,10 +809,10 @@ function updateOrdonnanceByCIN(data) {
       const sql = `UPDATE Ordonnance SET 
         IDP=?, Medicament1=?, Posologie1=?, Duree1=?,
         Medicament2=?, Posologie2=?, Duree2=?,
-        Medicament3=?, Posologie3=?, Duree3=?, Remarques=?, consultation_ref=?
+        Medicament3=?, Posologie3=?, Duree3=?, Remarques=?, consultation_ref=?, NomMedecin=?
         WHERE IDR=?`;
 
-      // Handle both old and new medication field names
+      // Handle medication field names
       const params = [
         patient.IDP,
         data.Medicament1 || data.M1 || '', 
@@ -772,6 +826,7 @@ function updateOrdonnanceByCIN(data) {
         data.Duree3 || data.D3 || '',
         data.Remarques || '', 
         data.consultation_ref || null,
+        data.medecinName || data.NomMedecin || '',  // ADD DOCTOR NAME
         data.IDR
       ];
 

@@ -23,7 +23,6 @@ contextBridge.exposeInMainWorld('electronAPI', {
   // ---------------------------
   getAppointmentsByDate: (date) => ipcRenderer.invoke('get-appointments-by-date', date),
   addAppointment: (appt) => ipcRenderer.invoke('add-appointment', appt),
-  updatePatient: (patient) => ipcRenderer.invoke('update-patient', patient),
 
   // ---------------------------
   // Consultation
@@ -44,7 +43,6 @@ contextBridge.exposeInMainWorld('electronAPI', {
   getOrCreateCurrentConsultation: (cin, medecinName) => ipcRenderer.invoke('get-or-create-current-consultation', { cin, medecinName }),
   
   // Existing functions (make sure they're there)
-  getPatientByCIN: (cin) => ipcRenderer.invoke('get-patient-by-cin', cin),
   getOrdonnances: () => ipcRenderer.invoke('get-ordonnances'),
   getOrdonnanceById: (id) => ipcRenderer.invoke('get-ordonnance-by-id', id),
   updateOrdonnance: (data) => ipcRenderer.invoke('update-ordonnance', data),

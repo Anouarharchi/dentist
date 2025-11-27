@@ -7,45 +7,107 @@
   <style>
     body { margin: 0; font-family: Arial, sans-serif; }
 
-    .sidebar {
-      width: 220px;
-      height: 100vh;
-      background-color: #1e90ff;
-      color: white;
-      display: flex;
-      flex-direction: column;
-    }
+.sidebar {
+  width: 260px;
+  height: 100vh;
+  background-color: #1e293b; /* Secondary dark blue-gray */
+  color: white;
+  display: flex;
+  flex-direction: column;
+  font-family: "Segoe UI", Roboto, -apple-system, BlinkMacSystemFont, sans-serif;
+  transition: width 0.3s ease;
+}
 
-    .logo {
-      padding: 20px;
-      font-size: 20px;
-      font-weight: bold;
-      text-align: center;
-      border-bottom: 1px solid rgba(255,255,255,0.3);
-    }
+/* Mobile responsive behavior */
+@media (max-width: 900px) {
+  .sidebar {
+    width: 70px;
+  }
+  
+  .sidebar .logo-text,
+  .sidebar .menu li span {
+    display: none;
+  }
+}
 
-    .menu {
-      list-style: none;
-      padding: 0;
-      margin: 0;
-      flex: 1;
-    }
+.logo {
+  padding: 24px 20px;
+  font-size: 20px;
+  font-weight: bold;
+  text-align: center;
+  border-bottom: 1px solid rgba(255,255,255,0.1);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 12px;
+}
 
-    .menu li {
-      padding: 12px 20px;
-      cursor: pointer;
-      transition: background-color 0.3s;
-    }
+.logo-icon {
+  width: 20px;
+  height: 20px;
+}
 
-    .menu li:hover {
-      background-color: #187bcd;
-    }
+.menu {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+  flex: 1;
+}
 
-    .menu li.active {
-      background-color: #104e8b;
-      font-weight: bold;
-      border-left: 4px solid #fff;
-    }
+.menu li {
+  padding: 12px 20px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  position: relative;
+}
+
+.menu li:hover {
+  background-color: #334155; /* Hover state */
+}
+
+.menu li.active {
+  background: linear-gradient(135deg, #0ea5a4, #0d9488); /* Teal gradient */
+  font-weight: 600;
+  border-left: 4px solid rgba(255,255,255,0.3);
+  box-shadow: 0 2px 4px rgba(14, 165, 164, 0.3);
+}
+
+.menu-icon {
+  width: 20px;
+  height: 20px;
+  color: currentColor;
+}
+
+.count-badge {
+  background-color: rgba(255, 255, 255, 0.2);
+  border-radius: 12px;
+  padding: 2px 8px;
+  font-size: 12px;
+  margin-left: auto;
+}
+
+.logout-button {
+  margin-top: auto;
+  padding: 16px 20px;
+  background-color: rgba(239, 68, 68, 0.1);
+  color: #ef4444;
+  border: none;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  font-family: inherit;
+  font-size: 14px;
+  font-weight: 500;
+  transition: all 0.2s ease;
+}
+
+.logout-button:hover {
+  background-color: rgba(239, 68, 68, 0.2);
+}
   </style>
 </head>
 <body>
